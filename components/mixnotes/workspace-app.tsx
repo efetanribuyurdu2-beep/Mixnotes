@@ -33,6 +33,7 @@ import { DiscoverView } from "./discover-view";
 import { ProfileAvatar } from "./profile-avatar";
 import { useServiceWorker } from "./install-app";
 import { StageBackdrop } from "./stage-backdrop";
+import { useAutoAnalysis } from "./use-auto-analysis";
 import { queueCommand, type QuickCommand } from "./pending-command";
 import { PracticeView } from "./practice-view";
 import { TransferView } from "./transfer-view";
@@ -178,6 +179,19 @@ export function WorkspaceApp() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  // Background writes (auto-analysis) skip toasts and the busy lock so they never block the DJ.
+  const applySilently = useCallback(async (action: Record<string, unknown>) => {
+    try {
+      const response = await fetch("/api/workspace/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(action) });
+      if (!response.ok) return null;
+      const payload = await response.json() as WorkspaceData;
+      setData(payload);
+      localStorage.setItem("mixnotes.workspace.snapshot", JSON.stringify(payload));
+      return payload;
+    } catch { return null; }
+  }, []);
+  useAutoAnalysis(data, offline, applySilently);
 
   const mutate = useCallback(async (action: WorkspaceAction, message = "Kaydedildi", onSuccess?: (data: WorkspaceData) => void) => {
     if (offline) { toast.error(translateUi("Değişiklik yapmak için yeniden bağlan.",data?.profile.language??"tr")); return false; }

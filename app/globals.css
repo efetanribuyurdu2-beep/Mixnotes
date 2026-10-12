@@ -1048,3 +1048,28 @@ button.rank-label small { overflow: hidden; color: var(--text-3); font-size: 11p
 .stem-attach label { display: grid; gap: 4px; color: var(--text-3); font-size: 12px; }
 .billing-actions { display: grid; gap: 8px; margin-top: 12px; }
 .billing-state { margin: 0; color: var(--accent-discovery); font-weight: 650; }
+
+/* Sub-tabs: one sticky row that splits long pages into focused sections */
+.sub-tabs { position: sticky; top: 58px; z-index: 15; display: flex; gap: 6px; margin: 0 0 18px; padding: 8px; overflow-x: auto; scrollbar-width: none; border: 1px solid var(--stage-edge, var(--line)); border-radius: 16px; background: rgba(18, 10, 24, .72); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); }
+.sub-tabs::-webkit-scrollbar { display: none; }
+.sub-tabs button { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--text-2); font-size: 14px; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s, border-color .2s; }
+.sub-tabs button:hover { background: rgba(255, 255, 255, .06); color: var(--text); }
+.sub-tabs button.active { border-color: hsl(var(--stage-h, 20) 80% 62% / .55); background: hsl(var(--stage-h, 20) 80% 55% / .18); color: var(--text); }
+.sub-tabs button.active svg { color: var(--stage-song, var(--accent-main)); }
+.sub-tabs button small { min-width: 20px; padding: 1px 6px; border-radius: 99px; background: rgba(255, 255, 255, .09); color: var(--text-2); font: 600 11px var(--font-data); text-align: center; }
+.sub-pane { animation: sub-pane-in .35s cubic-bezier(.22, 1, .36, 1); }
+.sub-pane[hidden] { display: none; }
+@keyframes sub-pane-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.builder-surface .sub-tabs { top: 64px; margin-top: 14px; }
+@media (max-width: 720px) {
+  .sub-tabs { top: 54px; margin-left: -4px; margin-right: -4px; border-radius: 14px; }
+  .sub-tabs button { min-height: 38px; padding: 0 13px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .sub-pane { animation: none; } }
+/* Toolbox and Plans pages had no inner padding; align them with other views. */
+.premium-hub { box-sizing: border-box; padding: 35px 38px 70px; }
+.pane-rhythm .tool-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); align-items: start; }
+.pane-rhythm .camelot-card { grid-column: auto; }
+@media (max-width: 1250px) { .premium-hub { padding-inline: 25px; } .pane-rhythm .tool-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .premium-hub { padding: 24px 14px 45px; } }
+.premium-hub > h1 { margin: 6px 0 12px; }

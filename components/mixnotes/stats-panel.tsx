@@ -3,6 +3,7 @@ import { L, Localized } from "./localized";
 
 import { useMemo, useRef, useState } from "react";
 import { useQuickCommands } from "./pending-command";
+import { selectTab } from "./sub-tabs";
 import { Flame } from "lucide-react";
 import { useWorkspace } from "./workspace-context";
 import { activityGrid, activityLevel, bpmHistogram, minutesSince, mostPlayed, practiceStreak, topKeys } from "@/lib/stats";
@@ -29,7 +30,7 @@ export function StatsPanel() {
   const readyTransitions = data.transitions.filter((t) => t.practiceStatus === "ready").length;
   const [activityText, setActivityText] = useState("");
   const panel = useRef<HTMLElement>(null);
-  useQuickCommands(["stats"], () => panel.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  useQuickCommands(["stats"], () => { selectTab("home", "stats"); requestAnimationFrame(() => panel.current?.scrollIntoView({ behavior: "smooth", block: "start" })); });
   const [bpmText, setBpmText] = useState("");
   const histogramMax = Math.max(1, ...histogram.map((b) => b.count));
   const keyMax = Math.max(1, ...keys.map((k) => k.count));

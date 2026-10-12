@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Check,
   CircleDashed,
+  ClipboardCheck,
   Download,
   Edit3,
   GripVertical,
@@ -16,6 +17,7 @@ import {
   Search,
   MonitorPlay,
   Share2,
+  Sparkles,
   Trash2,
   Wand2,
 } from "lucide-react";
@@ -24,6 +26,7 @@ import { SetTemplateDialog } from "./set-template-dialog";
 import { SetExportDialog } from "./set-export-dialog";
 import { SetShareDialog } from "./set-share-dialog";
 import { useQuickCommands } from "./pending-command";
+import { Pane, SubTabs } from "./sub-tabs";
 import { ReorderActions, TrackStrip } from "./track-strip";
 import { useWorkspace } from "./workspace-context";
 import { recommendNext } from "@/lib/dj-logic";
@@ -191,7 +194,9 @@ export function SetsView() {
               {shareOpen && <SetShareDialog set={active} open={shareOpen} onOpenChange={setShareOpen} />}
               {exportOpen && <SetExportDialog set={active} tracks={orderedTracks} open={exportOpen} onOpenChange={setExportOpen} onNotes={exportSet} />}
               {optimizerOpen && <SetOptimizer set={active} tracks={orderedTracks} open={optimizerOpen} onOpenChange={setOptimizerOpen} />}
-              <SetFlow tracks={orderedTracks} /><SetReadiness setId={active.id}/>
+              <SubTabs id="set-builder" tabs={[{ id: "flow", label: "Akış", icon: ListMusic, badge: orderedTracks.length }, { id: "ready", label: "Hazırlık", icon: ClipboardCheck }, { id: "suggest", label: "Öneriler", icon: Sparkles, badge: recommendations.length || "" }]}>
+              <Pane id="flow">
+              <SetFlow tracks={orderedTracks} />
               {active.notes && <div className="set-note-inline"><span><L text={"SET NOTU"}/></span><p>{active.notes}</p></div>}
 
               {orderedTracks.length ? (
@@ -254,6 +259,9 @@ export function SetsView() {
                 </div>
               )}
 
+              </Pane>
+              <Pane id="ready"><SetReadiness setId={active.id}/></Pane>
+              <Pane id="suggest">
               {orderedTracks.length>0 && <section className="recommendation-panel"><div className="section-title-row"><div><p className="overline">NEXT TRACK</p><h3>{orderedTracks[orderedTracks.length-1].title}<L text={" sonrasında"}/></h3></div><span><L text={"Library önerileri"}/></span></div><p className="muted-copy"><L text={"Kayıtlı geçişler, BPM, Camelot key ve enerji bilgilerine göre sıralanır. Dinleyerek kontrol et."}/></p>{recommendations.length ? <div className="recommendation-list">{recommendations.map(({track,reasons})=><div key={track.id}><div><strong>{track.title}</strong><p>{track.artist}</p><small>{reasons.join(" · ")}</small></div><button className="button secondary" disabled={busy} onClick={()=>mutate({type:"set.track.add",setId:active!.id,trackId:track.id},"Öneri sete eklendi")}><L text={"Sete ekle"}/></button></div>)}</div> : <p className="muted-copy"><L text={"Öneri için Library’ye çalınabilir parçalar ve BPM / key / enerji bilgisi ekle."}/></p>}</section>}
               {available.length > 0 && (
                 <section className="source-tray">
@@ -266,6 +274,8 @@ export function SetsView() {
                   </div>
                 </section>
               )}
+              </Pane>
+              </SubTabs>
             </>
           ) : (
             <div className="guided-empty centerpiece-empty">

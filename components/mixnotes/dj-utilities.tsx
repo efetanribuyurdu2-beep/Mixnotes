@@ -7,6 +7,7 @@ import { useWorkspace } from "./workspace-context";
 import { compatibleKeys, harmonicMatch, parseCamelot } from "@/lib/set-flow";
 import { beatTimings, tapTempo } from "@/lib/tap-tempo";
 import { useQuickCommands } from "./pending-command";
+import { selectTab } from "./sub-tabs";
 
 const keyNames: Record<string, string> = {
   "1A": "A♭m", "2A": "E♭m", "3A": "B♭m", "4A": "Fm", "5A": "Cm", "6A": "Gm", "7A": "Dm", "8A": "Am", "9A": "Em", "10A": "Bm", "11A": "F♯m", "12A": "D♭m",
@@ -19,7 +20,7 @@ export function TapTempo() {
   const [pulse, setPulse] = useState(false);
   const pulseTimer = useRef<number | undefined>(undefined);
   const pad = useRef<HTMLButtonElement>(null);
-  useQuickCommands(["tap"], () => { pad.current?.scrollIntoView({ behavior: "smooth", block: "center" }); pad.current?.focus({ preventScroll: true }); });
+  useQuickCommands(["tap"], () => { selectTab("toolbox", "rhythm"); requestAnimationFrame(() => { pad.current?.scrollIntoView({ behavior: "smooth", block: "center" }); pad.current?.focus({ preventScroll: true }); }); });
   const bpm = tapTempo(taps);
   const nearby = bpm ? data.tracks.filter((t) => t.bpm !== null && Math.abs(t.bpm - bpm) <= 3).sort((a, b) => Math.abs(a.bpm! - bpm) - Math.abs(b.bpm! - bpm)).slice(0, 5) : [];
 
@@ -77,7 +78,7 @@ export function CamelotWheel() {
   const { data, setSelectedTrackId, setView } = useWorkspace();
   const [selected, setSelected] = useState("8A");
   const card = useRef<HTMLElement>(null);
-  useQuickCommands(["camelot"], () => card.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  useQuickCommands(["camelot"], () => { selectTab("toolbox", "rhythm"); requestAnimationFrame(() => card.current?.scrollIntoView({ behavior: "smooth", block: "start" })); });
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     for (const t of data.tracks) { const key = parseCamelot(t.musicalKey); if (key) { const id = `${key.number}${key.letter}`; map.set(id, (map.get(id) ?? 0) + 1); } }

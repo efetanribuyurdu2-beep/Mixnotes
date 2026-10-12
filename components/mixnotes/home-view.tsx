@@ -2,6 +2,8 @@
 import {L,Localized} from "./localized";
 import { StatsPanel } from "./stats-panel";
 import { InstallAppCard } from "./install-app";
+import { Pane, SubTabs } from "./sub-tabs";
+import { BarChart3, LayoutDashboard } from "lucide-react";
 
 import { ArrowRight, Boxes, ListMusic, Plus, Repeat2, Search, Sparkles } from "lucide-react";
 import { TrackStrip } from "./track-strip";
@@ -29,8 +31,8 @@ export function HomeView() {
       <header className="view-header home-heading">
         <div>
           <p className="overline"><L text={"HAZIRLIK MASASI"}/></p>
-          <h1><L text={"Sıradaki set burada başlar."}/></h1>
-          <p className="view-intro"><L text={"Keşfettiğin parçadan prova edeceğin geçişe kadar kaldığın yerden devam et."}/></p>
+          <h1><L text={"Geceye imzanı bırak."}/></h1>
+          <p className="view-intro"><L text={"Keşiften sahneye, her geçiş senin imzan. Parçanı bul, akışını kur, geçişini prova et."}/></p>
         </div>
         <div className="header-actions">
           <button className="button secondary" onClick={() => openEditor({ kind: "track", origin: "discovery" })}>
@@ -50,6 +52,9 @@ export function HomeView() {
         <button onClick={() => setView("transitions")}><Repeat2 size={16} /><span><L text={"GEÇİŞİ ÇALIŞ"}/></span><strong>{data.transitions.length}</strong></button>
       </section>
 
+      <InstallAppCard />
+      <SubTabs id="home" tabs={[{ id: "overview", label: "Genel", icon: LayoutDashboard }, { id: "stats", label: "İstatistikler", icon: BarChart3 }]}>
+      <Pane id="overview">
       <div className="home-grid">
         <section className="home-section continue-section">
           <div className="section-title-row">
@@ -103,8 +108,6 @@ export function HomeView() {
       </div>
 
       <section className="studio-overview"><div><p className="overline">THE DJ WORKSPACE</p><h2><L text={"Keşiften sahneye."}/></h2><p><L text={"Parçalarını bul, akışını kur, prova et. Her karar bir sonraki setine kalsın."}/></p><div className="header-actions"><button className="button primary" onClick={()=>setView("discover")}><L text={"Discover’ı aç "}/><ArrowRight size={16}/></button><button className="button secondary" onClick={()=>setView("practice")}><L text={"Prova kaydet"}/></button></div></div><div className="studio-numbers"><span><strong>{data.tracks.length}</strong><L text={"PARÇA"}/></span><span><strong>{(data.sessions??[]).reduce((n,s)=>n+s.durationMinutes,0)}</strong><L text={"PROVA / SAHNE DK"}/></span></div></section>
-      <InstallAppCard />
-      <StatsPanel />
       <section className="home-section recent-section">
         <div className="section-title-row">
           <div><p className="overline"><L text={"SON EKLENENLER"}/></p><h2><L text={"Hazırlık kuyruğun"}/></h2></div>
@@ -123,6 +126,9 @@ export function HomeView() {
           </div>
         )}
       </section>
+      </Pane>
+      <Pane id="stats"><StatsPanel /></Pane>
+      </SubTabs>
     </div></Localized>
   );
 }

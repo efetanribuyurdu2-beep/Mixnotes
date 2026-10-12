@@ -842,6 +842,23 @@ Free hesabın aktif. Pro’ya istediğin zaman geçebilirsin.|Your Free account 
 Ödemeler henüz açılmadı.|Payments are not open yet.
 Pro aboneliğin zaten aktif. Yönetmek için “Aboneliği yönet”i kullan.|Your Pro subscription is already active. Use “Manage subscription” to change it.
 Yönetilecek bir abonelik bulunamadı.|No subscription to manage was found.
+BPM / key ses dosyasından dolduruldu|BPM / key filled from the audio file
+Bölümler|Sections
+Ritim & Key|Rhythm & key
+Set araçları|Set tools
+Pratik|Practice
+Donanım & Servisler|Gear & services
+Stüdyo|Studio
+Karşılaştır|Compare
+Kontrolcü|Controller
+Seanslar|Sessions
+Akış|Flow
+Hazırlık|Readiness
+Öneriler|Suggestions
+Genel|Overview
+Geceye imzanı bırak.|Leave your mark on the night.
+Keşiften sahneye, her geçiş senin imzan. Parçanı bul, akışını kur, geçişini prova et.|From discovery to the stage, every transition is your signature. Find the track, build the flow, rehearse the blend.
+Kabine hazır gir.|Step into the booth ready.
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){
@@ -852,6 +869,7 @@ export function translateUi(text:string,language:Language){
  const memory=trimmed.match(/^Hafıza: (\d)\/5$/);if(memory)return `Memory: ${memory[1]}/5`;
  const search=trimmed.match(/^“(.*)” için ara$/);if(search)return `Search for “${search[1]}”`;
  const difference=trimmed.match(/^([\d.]+) BPM fark$/);if(difference)return `${difference[1]} BPM difference`;
+ const estimated=trimmed.match(/^(\d+) parçanın BPM \/ key bilgisi önizlemeden tahmin edildi\. Kulağınla doğrula\.$/);if(estimated)return `Estimated BPM / key for ${estimated[1]} tracks from previews. Confirm by ear.`;
  const target=trimmed.match(/^(.*) içine eklendi$/);if(target)return `Added to ${target[1]}`;
  const count=trimmed.match(/^(\d+) parça hazır$/);if(count)return `${count[1]} tracks ready`;
  const toast=trimmed.match(/^(.*) Library’ye eklendi$/);if(toast)return `${toast[1]} added to Library`;
