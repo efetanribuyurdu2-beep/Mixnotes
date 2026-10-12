@@ -31,8 +31,8 @@ export function HomeView() {
       <header className="view-header home-heading">
         <div>
           <p className="overline"><L text={"HAZIRLIK MASASI"}/></p>
-          <h1><L text={"Geceye imzanı bırak."}/></h1>
-          <p className="view-intro"><L text={"Keşiften sahneye, her geçiş senin imzan. Parçanı bul, akışını kur, geçişini prova et."}/></p>
+          <h1><L text={"Pisti sen yönet."}/></h1>
+          <p className="view-intro"><L text={"Keşiften sahneye her kararın burada. Parçanı bul, akışını kur, geçişini prova et."}/></p>
         </div>
         <div className="header-actions">
           <button className="button secondary" onClick={() => openEditor({ kind: "track", origin: "discovery" })}>

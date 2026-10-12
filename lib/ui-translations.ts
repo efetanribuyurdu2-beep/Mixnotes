@@ -859,6 +859,8 @@ Genel|Overview
 Geceye imzanı bırak.|Leave your mark on the night.
 Keşiften sahneye, her geçiş senin imzan. Parçanı bul, akışını kur, geçişini prova et.|From discovery to the stage, every transition is your signature. Find the track, build the flow, rehearse the blend.
 Kabine hazır gir.|Step into the booth ready.
+Pisti sen yönet.|Own the dance floor.
+Keşiften sahneye her kararın burada. Parçanı bul, akışını kur, geçişini prova et.|Every decision from discovery to the stage lives here. Find the track, build the flow, rehearse the blend.
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){
