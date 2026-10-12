@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { STAGE_DEFAULT, barSeconds, extractCoverTone, toneFromText, type StageTone } from "@/lib/stage-palette";
 import { useWorkspace } from "./workspace-context";
+import { LiveText } from "./live-text";
 
 /**
  * Gün batımı kulübü zemini.
@@ -54,12 +55,15 @@ export function StageBackdrop() {
   }, [tone, bpm]);
 
   return (
-    <div className="stage-backdrop" aria-hidden="true">
-      <div className="stage-beams" />
-      <div className="stage-sun" />
-      <div className="stage-blob stage-blob-song"><i /></div>
-      <div className="stage-blob stage-blob-violet"><i /></div>
-      <div className="stage-vignette" />
-    </div>
+    <>
+      <div className="stage-backdrop" aria-hidden="true">
+        <div className="stage-beams" />
+        <div className="stage-sun" />
+        <div className="stage-blob stage-blob-song"><i /></div>
+        <div className="stage-blob stage-blob-violet"><i /></div>
+        <div className="stage-vignette" />
+      </div>
+      <LiveText />
+    </>
   );
 }

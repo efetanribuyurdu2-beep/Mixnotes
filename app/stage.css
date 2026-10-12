@@ -93,11 +93,7 @@ html, body { background: #0e0813; }
 .workflow-line > i { background: repeating-linear-gradient(90deg, hsl(var(--stage-h) 80% 70% / .7) 0 2px, transparent 2px 5px); }
 
 /* ---------- Başlıklar ve butonlar (sahne paleti, turkuaz yok) ---------- */
-@supports (background-clip: text) {
-  .view-header h1, .brand-lockup strong {
-    background-image: linear-gradient(105deg, #ffd29a 0%, #ff9a8b 46%, hsl(var(--stage-h) 86% 74%) 100%);
-  }
-}
+/* Başlıkların rengi: aşağıdaki "CANLI YAZI" bölümünde. */
 .view-header::after { background: linear-gradient(90deg, #ffb28c88, hsl(var(--stage-h) 80% 66% / .5), transparent); }
 .button.primary, .button.primary:hover:not(:disabled) {
   background: linear-gradient(110deg, #ffb066 0%, #ff7a85 55%, hsl(var(--stage-h) 82% 64%) 100%);
@@ -116,6 +112,46 @@ html, body { background: #0e0813; }
 .signal-mark i:nth-child(3) { animation-delay: calc(var(--stage-bar) / -1.5); }
 @keyframes stage-eq { 0%, 100% { transform: scaleY(.55); } 30% { transform: scaleY(1.15); } 60% { transform: scaleY(.75); } }
 
+/* ---------- CANLI YAZI: sloganlar ve logo yazısı ----------
+   Normalde sakin, tek tonlu (krem). Fare (ya da parmak) üzerine gelince yazı
+   canlı sahne renklerine dolar: akan gün batımı gradyanı + imleci takip eden
+   parlak bir ışık. Fare çekilince renk yavaşça söner.
+   İmleç konumunu live-text.tsx yazar (--mx, --my, data-live). */
+@property --live { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --live-r { syntax: "<length>"; inherits: false; initial-value: 1px; }
+
+.view-header h1, .studio-overview h2, .brand-lockup strong, .premium-hub > h1 {
+  --live: 0; --live-r: 1px; --mx: 50%; --my: 50%;
+  --live-base: rgba(255, 236, 222, .8);   /* sakin hal: tek ton, buradan değiştirilir */
+  background-image:
+    radial-gradient(circle var(--live-r) at var(--mx) var(--my), rgba(255, 250, 240, calc(var(--live) * .95)) 0%, rgba(255, 250, 240, 0) 100%),
+    linear-gradient(100deg,
+      hsl(38 100% 68% / var(--live)) 0%, hsl(12 100% 66% / var(--live)) 20%, hsl(335 92% 68% / var(--live)) 40%,
+      hsl(280 85% 72% / var(--live)) 60%, hsl(var(--stage-h) 92% 68% / var(--live)) 80%, hsl(38 100% 68% / var(--live)) 100%),
+    linear-gradient(var(--live-base), var(--live-base));
+  background-size: 100% 100%, 200% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, repeat-x, no-repeat;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  transition: --live .5s ease, --live-r .7s cubic-bezier(.22, 1, .36, 1);
+}
+.view-header h1:hover, .studio-overview h2:hover, .brand-lockup:hover strong, .premium-hub > h1:hover,
+.view-header h1[data-live], .studio-overview h2[data-live], .brand-lockup strong[data-live], .premium-hub > h1[data-live] {
+  --live: 1; --live-r: 130px;
+  animation: live-flow 2.8s linear infinite;
+}
+/* Logo yazısı küçük olduğu için ışık dairesi de küçük */
+.brand-lockup:hover strong, .brand-lockup strong[data-live] { --live-r: 60px; }
+@keyframes live-flow { to { background-position: 0 0, 200% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .view-header h1:hover, .studio-overview h2:hover, .brand-lockup:hover strong, .premium-hub > h1:hover,
+  .view-header h1[data-live], .studio-overview h2[data-live], .brand-lockup strong[data-live], .premium-hub > h1[data-live] { animation: none; }
+}
+@media (forced-colors: active) {
+  .view-header h1, .studio-overview h2, .brand-lockup strong, .premium-hub > h1 { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
+}
+
 /* ---------- Plak: ana sayfadaki büyük kart ---------- */
 .studio-overview {
   background: radial-gradient(120% 150% at 100% 0%, hsl(var(--stage-h) var(--stage-s) 50% / .6) 0%, transparent 62%), linear-gradient(135deg, rgba(74, 26, 52, .86), rgba(26, 13, 38, .92));
@@ -123,9 +159,6 @@ html, body { background: #0e0813; }
 }
 .studio-overview .overline, .studio-overview p:not(.overline), .studio-numbers span { color: rgba(255, 232, 218, .82); }
 .studio-numbers strong { color: #fff3ea; }
-@supports (background-clip: text) {
-  .studio-overview h2 { background-image: linear-gradient(105deg, #ffd29a, #ff9a8b 50%, hsl(var(--stage-h) 86% 78%)); }
-}
 .studio-overview .button.secondary { background: rgba(255, 255, 255, .06); border-color: rgba(255, 220, 200, .3); color: #ffeede; }
 .studio-overview::after {
   background:
