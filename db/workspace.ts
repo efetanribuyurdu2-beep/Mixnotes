@@ -195,6 +195,13 @@ export const schemaStatements = [
   `CREATE INDEX IF NOT EXISTS crate_tracks_owner_crate_idx ON crate_tracks (owner_id, crate_id, position)`,
   `CREATE INDEX IF NOT EXISTS set_tracks_owner_set_idx ON set_tracks (owner_id, set_id, position)`,
   `CREATE INDEX IF NOT EXISTS transitions_owner_pair_idx ON transitions (owner_id, from_track_id, to_track_id)`,
+  // Studio tables from migrations 0004–0006, kept idempotent so fresh databases work without a migration run.
+  `CREATE TABLE IF NOT EXISTS cloud_audio (owner_id TEXT NOT NULL, track_id TEXT NOT NULL, size INTEGER NOT NULL, name TEXT NOT NULL, status TEXT DEFAULT 'pending' NOT NULL, PRIMARY KEY (owner_id, track_id))`,
+  `CREATE TABLE IF NOT EXISTS stem_jobs (id TEXT PRIMARY KEY NOT NULL, owner_id TEXT NOT NULL, created_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS studio_notebooks (owner_id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, revision INTEGER DEFAULT 1 NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS plan_settings (id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, revision INTEGER DEFAULT 1 NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS spotify_connections (owner_id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS spotify_settings (id TEXT PRIMARY KEY NOT NULL, client_id TEXT NOT NULL)`,
 ];
 
 export async function identityFromRequest(request: Request): Promise<Identity | null> {

@@ -12,8 +12,11 @@ import {
   ListMusic,
   Plus,
   Search,
+  MonitorPlay,
   Trash2,
+  Wand2,
 } from "lucide-react";
+import { HarmonicBadge, SetOptimizer, StageMode } from "./set-stage";
 import { ReorderActions, TrackStrip } from "./track-strip";
 import { useWorkspace } from "./workspace-context";
 import { recommendNext } from "@/lib/dj-logic";
@@ -26,24 +29,29 @@ function SetFlow({ tracks }: { tracks: Track[] }) {
   const min = bpms.length ? Math.min(...bpms) : 0;
   const max = bpms.length ? Math.max(...bpms) : 0;
   const range = Math.max(1, max - min);
-  const points = tracks.map((track, index) => {
-    const x = tracks.length === 1 ? 50 : (index / (tracks.length - 1)) * 100;
-    const y = track.bpm === null ? 70 : 75 - ((track.bpm - min) / range) * 50;
-    return `${x},${y}`;
-  }).join(" ");
+  const coords = tracks.map((track, index) => ({
+    id: track.id,
+    x: (index / (tracks.length - 1)) * 100,
+    y: track.bpm === null ? 70 : 75 - ((track.bpm - min) / range) * 50,
+    energyY: track.energy === null ? null : 85 - ((track.energy - 1) / 4) * 70,
+  }));
+  const points = coords.map(({ x, y }) => `${x},${y}`).join(" ");
+  const energyPoints = coords.filter((point) => point.energyY !== null).map(({ x, energyY }) => `${x},${energyY}`).join(" ");
 
   return (
     <Localized><div className="set-flow" aria-label={`BPM akışı ${min || "belirsiz"} ile ${max || "belirsiz"} arası`}>
-      <div className="set-flow-head"><span><L text={"BPM AKIŞI"}/></span><strong>{bpms.length ? `${min}–${max}` : "BPM verisi ekle"}</strong></div>
+      <div className="set-flow-head">
+        <span><L text={"BPM AKIŞI"}/></span>
+        <span className="flow-legend"><i className="is-bpm" />BPM<i className="is-energy" /><L text={"ENERJİ"}/></span>
+        <strong>{bpms.length ? `${min}–${max}` : <L text={"BPM verisi ekle"}/>}</strong>
+      </div>
       <svg viewBox="0 0 100 90" preserveAspectRatio="none" role="img">
         <path d="M0 75 H100" className="flow-grid" />
         <path d="M0 50 H100" className="flow-grid" />
         <path d="M0 25 H100" className="flow-grid" />
+        {energyPoints && <polyline points={energyPoints} className="flow-energy" />}
         <polyline points={points} className="flow-line" />
-        {tracks.map((track, index) => {
-          const [x, y] = points.split(" ")[index].split(",");
-          return <Localized><circle key={track.id} cx={x} cy={y} r="2.2" className="flow-point" /></Localized>;
-        })}
+        {coords.map(({ id, x, y }) => <circle key={id} cx={x} cy={y} r="2.2" className="flow-point" />)}
       </svg>
       <div className="flow-labels">{tracks.map((track, index) => <span key={track.id}>{String(index + 1).padStart(2, "0")}</span>)}</div>
     </div></Localized>
@@ -63,6 +71,8 @@ export function SetsView() {
   } = useWorkspace();
   const [sourceSearch, setSourceSearch] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [stageOpen, setStageOpen] = useState(false);
+  const [optimizerOpen, setOptimizerOpen] = useState(false);
   const active = data.sets.find((set) => set.id === selectedSetId) ?? data.sets[0];
   const trackById = new Map(data.tracks.map((track) => [track.id, track]));
   const orderedTracks = active?.tracks.map((item) => trackById.get(item.trackId)).filter(Boolean) as Track[] ?? [];
@@ -140,6 +150,8 @@ export function SetsView() {
                   <p className="set-meta-line">{active.genre || <L text={"Tür belirtilmedi"}/>}{active.eventDate && <><i /> <CalendarDays size={13} />{new Date(`${active.eventDate}T12:00:00`).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}</>}</p>
                 </div>
                 <div className="header-actions">
+                  {orderedTracks.length > 0 && <button className="button primary" onClick={() => setStageOpen(true)}><MonitorPlay size={15} /><L text={" Sahne modu"}/></button>}
+                  {orderedTracks.length > 2 && <button className="button secondary" onClick={() => setOptimizerOpen(true)}><Wand2 size={15} /><L text={" Akışı optimize et"}/></button>}
                   <button className="button secondary" onClick={exportSet}><L text={"Set notlarını indir"}/></button>
                   <button className="button secondary" onClick={() => openEditor({ kind: "picker", target: "set", targetId: active.id })}><Plus size={15} /><L text={" Parça ekle"}/></button>
                   <button data-localize-attrs="aria-label" className="icon-control" onClick={() => openEditor({ kind: "set", item: active })} aria-label="Seti düzenle"><Edit3 size={16} /></button>
@@ -152,6 +164,8 @@ export function SetsView() {
                 <span><small><L text={"GEÇİŞ"}/></small><strong>{preparedPairs}/{Math.max(0, orderedTracks.length - 1)}</strong></span>
                 <span><small><L text={"DURUM"}/></small><strong>{active.status === "ready" ? <L text={"Hazır"}/> : active.status === "performed" ? <L text={"Çalındı"}/> : <L text={"Taslak"}/>}</strong></span>
               </div>
+              {stageOpen && <StageMode set={active} tracks={orderedTracks} onClose={() => setStageOpen(false)} />}
+              {optimizerOpen && <SetOptimizer set={active} tracks={orderedTracks} open={optimizerOpen} onOpenChange={setOptimizerOpen} />}
               <SetFlow tracks={orderedTracks} /><SetReadiness setId={active.id}/>
               {active.notes && <div className="set-note-inline"><span><L text={"SET NOTU"}/></span><p>{active.notes}</p></div>}
 
@@ -161,7 +175,7 @@ export function SetsView() {
                     const next = orderedTracks[index + 1];
                     const transition = next ? data.transitions.find((item) => item.fromTrackId === track.id && item.toTrackId === next.id) : undefined;
                     return (
-                      <Localized><div key={track.id} className="sequence-item">
+                      <Localized key={track.id}><div className="sequence-item">
                         <div
                           className="set-track-drag"
                           draggable
@@ -202,6 +216,7 @@ export function SetsView() {
                             onClick={() => openEditor({ kind: "transition", item: transition, fromTrackId: track.id, toTrackId: next.id })}
                           >
                             {transition ? <><Check size={14} /><span>{transition.transitionType || <L text={"Geçiş hazır"}/>}</span><small>{transition.practiceStatus === "ready" ? "PROVASI HAZIR" : "NOTU VAR"}</small></> : <><CircleDashed size={14} /><span><L text={"Geçişi hazırla"}/></span><small>{track.bpm && next.bpm ? `${next.bpm - track.bpm > 0 ? "+" : ""}${Math.round((next.bpm - track.bpm) * 10) / 10} BPM` : "NOT EKLE"}</small></>}
+                            <HarmonicBadge from={track} to={next} />
                           </button>
                         )}
                       </div></Localized>

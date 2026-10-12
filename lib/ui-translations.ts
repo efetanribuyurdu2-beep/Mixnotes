@@ -683,6 +683,43 @@ Kayıtlı geçiş|Saved transition
 Yakın BPM|Similar BPM
 Uyumlu key|Compatible key
 Yakın enerji|Similar energy
+Aynı key|Same key
+Harmonik uyum|Harmonic match
+Enerji yükseltme|Energy boost
+Key çatışması|Key clash
+Key bilinmiyor|Key unknown
+ENERJİ|ENERGY
+BPM verisi ekle|Add BPM data
+Sahne modu|Stage mode
+Akışı optimize et|Optimize flow
+SAHNE MODU|STAGE MODE
+NOT|NOTE
+Geçiş notu yok|No transition note
+SIRADAKİ|UP NEXT
+Son parça. Kapanışı güzel yap.|Last track. Close it out beautifully.
+Önceki|Previous
+Sonraki|Next
+Performansı kaydet?|Log this performance?
+Nasıl geçti? Puan verirsen Transition Lab geçmişine eklenir ve set çalındı olarak işaretlenir.|How did it go? Rating it adds it to your Transition Lab history and marks the set as performed.
+Sahneye dön|Back to stage
+Kaydetmeden çık|Exit without saving
+Performans kaydedildi|Performance logged
+İlk parçan sabit kalır. Sıralama kayıtlı geçişlerine, BPM farkına, Camelot uyumuna ve enerji akışına göre puanlanır. Son karar senin.|Your opener stays put. Order is scored on saved transitions, BPM distance, Camelot compatibility and energy flow. The final call is yours.
+ŞİMDİ|NOW
+ÖNERİ|SUGGESTED
+Mevcut sıra zaten en akıcı seçenek görünüyor.|The current order already looks like the smoothest option.
+Vazgeç|Cancel
+Bu sırayı uygula|Apply this order
+Set akışı optimize edildi|Set flow optimized
+Ritme dokun; son vuruşların ortalaması BPM'i verir. 2 saniye beklersen yeniden başlar.|Tap along to the beat; your recent taps are averaged into BPM. Pause for 2 seconds to start over.
+DOKUN|TAP
+Sıfırla|Reset
+BU TEMPODA LIBRARY|LIBRARY AT THIS TEMPO
+Camelot çarkı|Camelot wheel
+Bir key seç; uyumlu key'ler ve Library'deki karşılıkları öne çıkar. Halka ne kadar doluysa o key'de o kadar parçan var.|Pick a key to highlight compatible keys and matching Library tracks. The fuller a segment, the more tracks you have in that key.
+UYUMLU KEY'LER|COMPATIBLE KEYS
+LIBRARY'DE|IN LIBRARY
+Bu key'lerde parça yok. Library'de key bilgisini Camelot formatında (ör. 8A) gir.|No tracks in these keys. Enter keys in Camelot format (e.g. 8A) in your Library.
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){
