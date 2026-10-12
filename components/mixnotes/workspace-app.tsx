@@ -33,6 +33,8 @@ import { DiscoverView } from "./discover-view";
 import { ProfileAvatar } from "./profile-avatar";
 import { useServiceWorker } from "./install-app";
 import { StageBackdrop } from "./stage-backdrop";
+import { JogNav } from "./jog-nav";
+import { CuePads } from "./cue-pads";
 import { useAutoAnalysis } from "./use-auto-analysis";
 import { queueCommand, type QuickCommand } from "./pending-command";
 import { PracticeView } from "./practice-view";
@@ -324,6 +326,8 @@ const activeSetId = selectedSetId || data.sets[0]?.id || "";
         <div className="app-body">
           <aside className={`left-rail${mobileNav ? " mobile-open" : ""}`}>
             <div className="mobile-rail-head"><span><L text={"MENÜ"}/></span><button data-localize-attrs="aria-label" onClick={() => setMobileNav(false)} aria-label="Menüyü kapat"><X size={20} /></button></div>
+            <JogNav items={navigation} activeId={view} onSelect={setView} />
+            <CuePads onFire={() => setMobileNav(false)} />
             <nav aria-label="Ana navigasyon">
               {navigation.map((item) => {
                 const Icon = item.icon;

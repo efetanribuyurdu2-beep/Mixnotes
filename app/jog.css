@@ -1,0 +1,185 @@
+/* =====================================================================
+   JOG WHEEL gezinme. stage.css'ten bağımsızdır; stage.css yoksa da çalışır
+   (renkler fallback'li). Kapatmak için layout.tsx'teki "./jog.css" satırını
+   ve workspace-app.tsx'teki <JogNav /> satırını silmek yeter.
+   ===================================================================== */
+
+.jog {
+  --jog-size: 150px;
+  --jog-r: 50px;        /* çentiklerin yarıçapı */
+  --jog-hub: 58px;
+  --jog-accent: var(--stage-song, var(--accent-main));
+  display: grid; justify-items: center; gap: 12px;
+  margin: 2px 0 20px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--stage-edge, var(--line));
+}
+
+.jog-wheel {
+  position: relative; width: var(--jog-size); height: var(--jog-size); margin-top: 10px;
+  border-radius: 50%; cursor: grab; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(circle closest-side, #1d1027 0 96%, transparent 97%);
+  box-shadow: 0 0 0 1px rgba(255, 205, 170, .18), 0 16px 34px -16px hsl(var(--stage-h, 374) var(--stage-s, 84%) 42% / .65), inset 0 0 24px rgba(0, 0, 0, .6);
+  outline-offset: 7px;
+}
+.jog-wheel:active { cursor: grabbing; }
+.jog-wheel:focus-visible { outline: 2px solid var(--jog-accent); }
+
+/* Üstteki sabit işaret: hangi çentiğin seçili olduğunu gösterir */
+.jog-marker {
+  position: absolute; top: -10px; left: 50%; margin-left: -6px; z-index: 2; pointer-events: none;
+  width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--jog-accent);
+  filter: drop-shadow(0 0 6px var(--jog-accent));
+}
+
+/* Plak: bölüm çentikleri ve ince çizgiler birlikte döner */
+.jog-platter {
+  position: absolute; inset: 0; border-radius: 50%; will-change: transform;
+  transition: transform .6s cubic-bezier(.3, 1.5, .5, 1); /* hafif aşıp yerine oturur */
+  background:
+    conic-gradient(from 20deg, transparent 0 14%, rgba(255, 255, 255, .075) 20%, transparent 28% 56%, rgba(255, 255, 255, .06) 64%, transparent 72%),
+    repeating-radial-gradient(circle closest-side, transparent 0 5px, rgba(255, 214, 190, .045) 5px 6px);
+}
+.jog-platter::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 190, .34) 0 .9deg, transparent .9deg 6deg);
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 78%, #000 80%, #000 92%, transparent 94%);
+  mask-image: radial-gradient(circle closest-side, transparent 78%, #000 80%, #000 92%, transparent 94%);
+}
+.jog-platter > i {
+  position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%;
+  background: rgba(255, 214, 190, .3); transition: background .3s ease, box-shadow .3s ease, scale .35s cubic-bezier(.3, 1.6, .5, 1);
+}
+.jog-platter > i.on { background: var(--jog-accent); box-shadow: 0 0 12px 3px var(--jog-accent); scale: 1.55; }
+
+/* Playhead: BPM'e bağlı dönen ışık, 4 ölçüde bir tur */
+.jog-led {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none; will-change: transform;
+  animation: jog-spin calc(var(--stage-bar, 1.9s) * 4) linear infinite;
+}
+.jog-led .tail {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 74%, hsl(var(--stage-h, 374) 90% 62% / .55) 100%);
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 94%, #000 95%, #000 100%);
+  mask-image: radial-gradient(circle closest-side, transparent 94%, #000 95%, #000 100%);
+}
+.jog-led .dot {
+  position: absolute; top: -1px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+  background: var(--jog-accent); box-shadow: 0 0 10px 2px var(--jog-accent);
+}
+@keyframes jog-spin { to { transform: rotate(360deg); } }
+
+/* Merkez: seçili bölümün simgesi */
+.jog-hub {
+  position: absolute; left: 50%; top: 50%; width: var(--jog-hub); height: var(--jog-hub);
+  margin: calc(var(--jog-hub) / -2) 0 0 calc(var(--jog-hub) / -2);
+  display: grid; place-items: center; border-radius: 50%; pointer-events: none; color: #2a0f14;
+  background: radial-gradient(circle at 35% 28%, rgba(255, 233, 205, .9), transparent 58%), linear-gradient(135deg, #ffb066, #ff7a85 55%, hsl(var(--stage-h, 374) 82% 64%));
+  box-shadow: 0 0 0 4px rgba(14, 8, 19, .85), 0 8px 20px -8px var(--jog-accent);
+}
+.jog-hub > span { display: grid; place-items: center; animation: jog-pop .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes jog-pop { from { transform: scale(.4) rotate(-40deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Alt satır: sıra numarası, ad ve ince ayar okları */
+.jog-meta { width: 100%; display: grid; grid-template-columns: 30px 1fr 30px; align-items: center; gap: 6px; }
+.jog-meta button {
+  width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border-radius: 50%;
+  border: 1px solid var(--stage-edge, var(--line)); background: rgba(255, 255, 255, .04); color: var(--text-2);
+  transition: background .25s ease, color .25s ease, transform .3s cubic-bezier(.22, 1, .36, 1);
+}
+.jog-meta button:hover { background: hsl(var(--stage-h, 374) var(--stage-s, 84%) 58% / .16); color: var(--text); }
+.jog-meta button:active { transform: scale(.88); }
+.jog-label { display: grid; gap: 3px; min-width: 0; text-align: center; }
+.jog-label small { font: 10px var(--font-data); letter-spacing: 1.4px; color: var(--text-3); }
+.jog-label strong {
+  font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: jog-label-in .4s cubic-bezier(.22, 1, .36, 1);
+}
+@keyframes jog-label-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Dar menü (ikon şeridi): küçük tekerlek, etiketsiz */
+@media (min-width: 721px) and (max-width: 980px) {
+  .jog { --jog-size: 52px; --jog-r: 17px; --jog-hub: 22px; margin: 0 0 12px; padding-bottom: 12px; gap: 0; }
+  .jog-wheel { margin-top: 8px; }
+  .jog-marker { top: -7px; margin-left: -4px; border-left-width: 4px; border-right-width: 4px; border-top-width: 6px; }
+  .jog-platter > i { width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; }
+  .jog-led .dot { width: 5px; height: 5px; margin-left: -2.5px; }
+  .jog-hub { box-shadow: 0 0 0 2px rgba(14, 8, 19, .85); }
+  .jog-hub svg { width: 11px; height: 11px; }
+  .jog-meta { display: none; }
+}
+
+/* Telefondaki çekmece menü: büyük tekerlek */
+@media (max-width: 720px) {
+  .jog { --jog-size: 176px; --jog-r: 59px; --jog-hub: 66px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jog-led, .jog-hub > span, .jog-label strong { animation: none !important; }
+  .jog-platter { transition: none; }
+}
+@media (forced-colors: active) {
+  .jog-wheel { box-shadow: none; border: 1px solid CanvasText; }
+  .jog-led { display: none; }
+}
+
+
+/* =====================================================================
+   HOT CUE PAD'LERİ: sık işlemler için dört pad (cue-pads.tsx)
+   ===================================================================== */
+.cues { display: grid; gap: 8px; margin: 0 0 20px; padding-bottom: 18px; border-bottom: 1px solid var(--stage-edge, var(--line)); }
+.cues-head { display: flex; justify-content: space-between; padding: 0 2px; color: var(--text-3); font-size: 10px; font-weight: 700; letter-spacing: 1.2px; }
+.cues-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.cue-pad {
+  --pad-h: 30;
+  position: relative; min-height: 60px; display: grid; align-content: center; justify-items: center; gap: 5px; padding: 8px 4px;
+  overflow: hidden; border-radius: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border: 1px solid hsl(var(--pad-h) 80% 62% / .38);
+  background: linear-gradient(160deg, hsl(var(--pad-h) 70% 30% / .6), hsl(var(--pad-h) 60% 13% / .8));
+  color: hsl(var(--pad-h) 92% 84%);
+  box-shadow: inset 0 1px 0 hsl(var(--pad-h) 100% 88% / .22), inset 0 -9px 14px -9px rgba(0, 0, 0, .55), 0 9px 18px -13px hsl(var(--pad-h) 90% 55% / .75);
+  transition: transform .25s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, filter .3s ease;
+}
+.cue-pad > * { position: relative; }
+/* LED: parçanın ölçüsüne göre yanar, her pad bir vuruş geriden gelir */
+.cue-pad::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, hsl(var(--pad-h) 95% 62% / .6), transparent 72%);
+  opacity: .2; animation: cue-led var(--stage-bar, 1.9s) ease-in-out infinite;
+  animation-delay: calc(var(--stage-bar, 1.9s) * var(--pad-i) * -.25);
+}
+.cue-pad small { position: absolute; top: 5px; left: 7px; font: 700 9px var(--font-data); opacity: .55; }
+.cue-pad span { max-width: 100%; font-size: 11px; font-weight: 700; letter-spacing: .5px; line-height: 1.15; text-align: center; }
+.cue-pad:hover { transform: translateY(-2px); filter: brightness(1.12); box-shadow: inset 0 1px 0 hsl(var(--pad-h) 100% 88% / .3), inset 0 -9px 14px -9px rgba(0, 0, 0, .5), 0 14px 24px -12px hsl(var(--pad-h) 95% 58% / .9); }
+.cue-pad:active { transform: translateY(1px) scale(.95); filter: brightness(1.25); }
+.cue-pad:focus-visible { outline: 2px solid hsl(var(--pad-h) 95% 70%); outline-offset: 2px; }
+
+/* Basınca pad'in içinden dışarı yayılan flaş */
+.cue-pad .flash {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; text-decoration: none;
+  background: radial-gradient(circle, hsl(var(--pad-h) 100% 82% / .85), transparent 70%);
+  animation: cue-fire .48s ease-out forwards;
+}
+@keyframes cue-led { 0% { opacity: .16; } 12% { opacity: .75; } 100% { opacity: .16; } }
+@keyframes cue-fire { from { opacity: 1; transform: scale(.4); } to { opacity: 0; transform: scale(1.6); } }
+
+/* Dar menü (ikon şeridi): küçük, etiketsiz pad'ler */
+@media (min-width: 721px) and (max-width: 980px) {
+  .cues { margin-bottom: 10px; padding-bottom: 10px; }
+  .cues-head, .cue-pad span, .cue-pad small { display: none; }
+  .cues-grid { gap: 4px; }
+  .cue-pad { min-height: 26px; padding: 0; border-radius: 7px; }
+  .cue-pad svg { width: 13px; height: 13px; }
+}
+/* Telefondaki çekmece: parmağa uygun büyük pad'ler */
+@media (max-width: 720px) { .cue-pad { min-height: 68px; } .cue-pad span { font-size: 12px; } }
+/* Kısa ekranlı laptoplarda tekerlek ve pad'ler biraz küçülür, menü sığsın */
+@media (min-width: 981px) and (max-height: 820px) {
+  .jog { --jog-size: 118px; --jog-r: 39px; --jog-hub: 46px; margin-bottom: 14px; padding-bottom: 12px; }
+  .jog-hub svg { width: 18px; height: 18px; }
+  .cues { margin-bottom: 14px; padding-bottom: 12px; }
+  .cue-pad { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) { .cue-pad::before, .cue-pad .flash { animation: none !important; } .cue-pad::before { opacity: .3; } }
+@media (forced-colors: active) { .cue-pad { border-color: CanvasText; background: Canvas; color: CanvasText; box-shadow: none; } .cue-pad::before { display: none; } }

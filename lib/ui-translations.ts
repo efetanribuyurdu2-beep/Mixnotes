@@ -861,6 +861,10 @@ Keşiften sahneye, her geçiş senin imzan. Parçanı bul, akışını kur, geç
 Kabine hazır gir.|Step into the booth ready.
 Pisti sen yönet.|Own the dance floor.
 Keşiften sahneye her kararın burada. Parçanı bul, akışını kur, geçişini prova et.|Every decision from discovery to the stage lives here. Find the track, build the flow, rehearse the blend.
+Bölüm tekerleği|Section wheel
+Önceki bölüm|Previous section
+Sonraki bölüm|Next section
+Hızlı işlemler|Quick actions
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){
