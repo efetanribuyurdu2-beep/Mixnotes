@@ -53,7 +53,7 @@ export function TransitionsView() {
             const from = trackById.get(transition.fromTrackId ?? "");
             const to = trackById.get(transition.toTrackId ?? "");
             return (
-              <Localized><article key={transition.id} className="memory-transition">
+              <Localized key={transition.id}><article className="memory-transition">
                 <header>
                   <span className={`status status-${transition.practiceStatus}`}>{transition.practiceStatus === "ready" && <Check size={12} />}<L text={statusLabels[transition.practiceStatus]}/></span>
                   <div><button data-localize-attrs="aria-label" className="icon-control" onClick={() => openEditor({ kind: "transition", item: transition })} aria-label="Geçişi düzenle"><Edit3 size={15} /></button><button data-localize-attrs="aria-label" className="icon-control danger-ghost" onClick={() => requestDelete({ kind: "transition", item: transition })} aria-label="Geçişi sil"><Trash2 size={15} /></button></div>

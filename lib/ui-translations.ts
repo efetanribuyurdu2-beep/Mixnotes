@@ -811,6 +811,37 @@ Kapat|Close
 Sahne modunu aç|Open stage mode
 Seti dışa aktar|Export set
 İstatistikler|Stats
+Sırayla özel bir Spotify playlist'i oluşturur. Spotify bağlantısı olan parçalar doğrudan, diğerleri aramayla eşlenir.|Creates a private Spotify playlist in set order. Tracks with a Spotify link are used directly; others are matched by search.
+Önce Discover'da Spotify hesabını bağla.|Connect your Spotify account in Discover first.
+Playlist hazır:|Playlist ready:
+parça eklendi.|tracks added.
+Spotify'da aç|Open in Spotify
+parça bulunamadı|tracks not found
+Spotify playlist oluşturulamadı. Tekrar dene.|Could not create the Spotify playlist. Try again.
+Spotify playlist oluşturma izni vermedi. Hesabını yeniden bağla; bağlanırken playlist izni istenecek.|Spotify did not allow playlist creation. Reconnect your account; playlist permission will be requested.
+Setteki parçaların hiçbiri Spotify’da bulunamadı.|None of the set's tracks were found on Spotify.
+Sette parça yok.|The set has no tracks.
+Set bulunamadı.|Set not found.
+İşleniyor… Sonuç otomatik kontrol ediliyor.|Processing… checking for the result automatically.
+Stem'lerin ekleneceği parça|Track to attach the stems to
+Stem'leri Stem Mixer'a ekle|Add stems to Stem Mixer
+Stem dosyası sağlayıcıdan alınamadı. Bağlantının süresi dolmuş olabilir.|Could not fetch the stem from the provider. The link may have expired.
+Çıktılarda vokal/davul/bass/diğer stem’i bulunamadı.|No vocal/drum/bass/other stems were found in the outputs.
+Pro aktif|Pro active
+Yıllık|Yearly
+Aylık|Monthly
+yenileme|renews
+Aboneliği yönet|Manage subscription
+Aylık Pro'ya geç|Go Pro monthly
+Yıllık Pro'ya geç|Go Pro yearly
+Ödeme Stripe'ın güvenli sayfasında alınır; kart bilgilerin MixNotes'a gelmez. İstediğin zaman iptal edebilirsin.|Payment happens on Stripe's secure page; your card details never reach MixNotes. Cancel any time.
+Dahil|Included
+Pro hesabın aktif · Tüm araçlar ve sınırsız hazırlık kaydı açık.|Your Pro account is active · All tools and unlimited prep records are unlocked.
+Free hesabın aktif. Pro’ya istediğin zaman geçebilirsin.|Your Free account is active. Upgrade to Pro any time.
+Ödeme isteği tamamlanamadı.|The payment request could not be completed.
+Ödemeler henüz açılmadı.|Payments are not open yet.
+Pro aboneliğin zaten aktif. Yönetmek için “Aboneliği yönet”i kullan.|Your Pro subscription is already active. Use “Manage subscription” to change it.
+Yönetilecek bir abonelik bulunamadı.|No subscription to manage was found.
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){

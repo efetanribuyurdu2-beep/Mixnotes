@@ -32,6 +32,7 @@ import { PlansView, StudioToolsView } from "./studio-tools";
 import { DiscoverView } from "./discover-view";
 import { ProfileAvatar } from "./profile-avatar";
 import { useServiceWorker } from "./install-app";
+import { StageBackdrop } from "./stage-backdrop";
 import { queueCommand, type QuickCommand } from "./pending-command";
 import { PracticeView } from "./practice-view";
 import { TransferView } from "./transfer-view";
@@ -103,7 +104,7 @@ function readWorkspaceSnapshot() {
 export function WorkspaceApp() {
   useServiceWorker();
   const [data, setData] = useState<WorkspaceData | null>(null);
-  useEffect(() => { const url=new URL(window.location.href);const listen=url.searchParams.get('listen');if(listen==='discover'||listen==='practice'){setView(listen);url.searchParams.delete('listen');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}const result=url.searchParams.get('spotify');if(!result)return;setView('discover');const message=result==='connected'?'Spotify hesabın bağlı.':result==='cancelled'?'Spotify bağlantısı iptal edildi.':'Spotify bağlantısı tamamlanamadı. Ayarları kontrol edip yeniden dene.';if(result==='connected')toast.success(message);else toast.error(message);url.searchParams.delete('spotify');window.history.replaceState(null,'',url.pathname+url.search+url.hash);},[]);
+  useEffect(() => { const url=new URL(window.location.href);const listen=url.searchParams.get('listen');if(listen==='discover'||listen==='practice'){setView(listen);url.searchParams.delete('listen');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}const billing=url.searchParams.get('billing');if(billing){setView('plans');if(billing==='success')toast.success('Ödemen alındı. Pro birkaç saniye içinde açılır.');else toast('Ödeme iptal edildi; hesabından para çekilmedi.');url.searchParams.delete('billing');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}const result=url.searchParams.get('spotify');if(!result)return;setView('discover');const message=result==='connected'?'Spotify hesabın bağlı.':result==='cancelled'?'Spotify bağlantısı iptal edildi.':'Spotify bağlantısı tamamlanamadı. Ayarları kontrol edip yeniden dene.';if(result==='connected')toast.success(message);else toast.error(message);url.searchParams.delete('spotify');window.history.replaceState(null,'',url.pathname+url.search+url.hash);},[]);
   useEffect(() => { document.documentElement.lang = data?.profile.language ?? "tr"; }, [data?.profile.language]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -292,6 +293,7 @@ const activeSetId = selectedSetId || data.sets[0]?.id || "";
     <LanguageContext.Provider value={data.profile.language??"tr"}><WorkspaceProvider value={contextValue}><Localized>
       <Toaster theme="dark" position="bottom-right" />
       <div className="app-shell">
+        <StageBackdrop />
         <header className="app-topbar">
           <button data-localize-attrs="aria-label" className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Menüyü aç"><Menu size={20} /></button>
           <button data-localize-attrs="aria-label" className="brand-lockup" onClick={() => navigate("home")} aria-label="MixNotes ana çalışma alanı">

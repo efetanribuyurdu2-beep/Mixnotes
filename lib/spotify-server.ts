@@ -1,7 +1,7 @@
 import {env} from 'cloudflare:workers';
 import {database} from '@/db/raw';
 export class SpotifyError extends Error{constructor(message:string,public status=400){super(message);}}
-export const spotifyScopes='user-read-private playlist-read-private playlist-read-collaborative';
+export const spotifyScopes='user-read-private playlist-read-private playlist-read-collaborative playlist-modify-private';
 const b64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const un64=(text:string)=>Uint8Array.from(atob(text.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
 async function key(){const raw=(env as unknown as Record<string,string>).SPOTIFY_STORAGE_KEY;if(!/^[a-f0-9]{64}$/i.test(raw||''))throw new SpotifyError('Spotify güvenli bağlantısı henüz hazır değil.',503);return crypto.subtle.importKey('raw',new Uint8Array(raw.match(/../g)!.map(v=>parseInt(v,16))),'AES-GCM',false,['encrypt','decrypt']);}
@@ -30,4 +30,49 @@ export async function refreshSpotifyMetadata(owner:string,ids:string[]){
   statements.push(db.prepare('UPDATE tracks SET duration_seconds=COALESCE(duration_seconds,?),updated_at=?,revision=revision+1 WHERE owner_id=? AND id=? AND revision=?').bind(song.durationSeconds,new Date().toISOString(),owner,row.id,row.revision));
  }
  const results=await db.batch(statements);if(results.some(r=>!r.meta.changes))throw new SpotifyError('Parça başka bir sekmede değişti. Sayfayı yenile.',409);
+}
+
+export async function spotifyPost(owner:string,path:string,body:unknown){
+ const token=await tokenFor(owner);
+ const r=await fetch('https://api.spotify.com/v1'+path,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
+ if(r.status===401)throw new SpotifyError('Spotify oturumu sona erdi. Hesabını yeniden bağla.',401);
+ // Connections made before playlist export existed lack the write scope.
+ if(r.status===403)throw new SpotifyError('Spotify playlist oluşturma izni vermedi. Hesabını yeniden bağla; bağlanırken playlist izni istenecek.',403);
+ if(r.status===429)throw new SpotifyError('Spotify istek sınırına ulaşıldı. Biraz sonra tekrar dene.',429);
+ if(!r.ok)throw new SpotifyError('Spotify playlist oluşturulamadı. Tekrar dene.',502);
+ return r.json() as Promise<Record<string,unknown>>;
+}
+
+export function spotifyTrackIdFrom(url:string){
+ try{const u=new URL(url),match=u.pathname.match(/^\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]{22})\/?$/);return u.protocol==='https:'&&u.hostname==='open.spotify.com'&&match?match[1]:null;}catch{return null;}
+}
+
+// Builds a private Spotify playlist from a set: linked Spotify sources first, otherwise the top search hit.
+export async function exportSetToSpotify(owner:string,setId:string){
+ const db=database();
+ const set=await db.prepare('SELECT title FROM mix_sets WHERE owner_id=? AND id=?').bind(owner,setId).first<{title:string}>();
+ if(!set)throw new SpotifyError('Set bulunamadı.',404);
+ const rows=await db.prepare('SELECT t.id,t.title,t.artist FROM set_tracks s JOIN tracks t ON t.owner_id=s.owner_id AND t.id=s.track_id WHERE s.owner_id=? AND s.set_id=? ORDER BY s.position,s.added_at').bind(owner,setId).all<{id:string;title:string;artist:string}>();
+ if(!rows.results.length)throw new SpotifyError('Sette parça yok.',400);
+ const sources=await db.prepare('SELECT track_id,external_url FROM track_sources WHERE owner_id=?').bind(owner).all<{track_id:string;external_url:string}>();
+ const linked=new Map<string,string>();
+ for(const source of sources.results){const id=spotifyTrackIdFrom(source.external_url);if(id&&!linked.has(source.track_id))linked.set(source.track_id,id);}
+ const uris:string[]=[],unmatched:string[]=[];
+ for(const track of rows.results.slice(0,200)){
+  let id=linked.get(track.id)??null;
+  if(!id){
+   const clean=(text:string)=>text.replace(/["']/g,' ').trim();
+   const query=[`track:${clean(track.title)}`,track.artist&&`artist:${clean(track.artist.split(/,|&| feat\.? /i)[0])}`].filter(Boolean).join(' ');
+   const result=await spotifyGet(owner,`/search?type=track&limit=1&q=${encodeURIComponent(query)}`);
+   const items=(result.tracks as {items?:unknown[]}|undefined)?.items??[];
+   id=mapSpotifyTrack(items[0])?.id??null;
+  }
+  if(id)uris.push(`spotify:track:${id}`);else unmatched.push(track.artist?`${track.artist} - ${track.title}`:track.title);
+ }
+ if(!uris.length)throw new SpotifyError('Setteki parçaların hiçbiri Spotify’da bulunamadı.',404);
+ const playlist=await spotifyPost(owner,'/me/playlists',{name:`${set.title} · MixNotes`.slice(0,100),public:false,description:'MixNotes set sırası'});
+ const playlistId=typeof playlist.id==='string'&&/^[a-zA-Z0-9]{22}$/.test(playlist.id)?playlist.id:null;
+ if(!playlistId)throw new SpotifyError('Spotify playlist oluşturulamadı. Tekrar dene.',502);
+ for(let i=0;i<uris.length;i+=100)await spotifyPost(owner,`/playlists/${playlistId}/items`,{uris:uris.slice(i,i+100)});
+ return {url:`https://open.spotify.com/playlist/${playlistId}`,added:uris.length,unmatched};
 }

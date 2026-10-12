@@ -3,6 +3,7 @@ import { matchesRule } from "@/lib/dj-logic";
 import { readExtensions } from "@/db/workspace-extensions";
 import { database } from "@/db/raw";
 import { shareSchemaStatements, shareTokens } from "@/db/set-shares";
+import { billingSchemaStatements } from "@/db/billing";
 import type {
   CrateInput,
   SetInput,
@@ -204,6 +205,7 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS spotify_connections (owner_id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS spotify_settings (id TEXT PRIMARY KEY NOT NULL, client_id TEXT NOT NULL)`,
   ...shareSchemaStatements,
+  ...billingSchemaStatements,
 ];
 
 export async function identityFromRequest(request: Request): Promise<Identity | null> {

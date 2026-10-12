@@ -28,7 +28,7 @@ function formatClock(seconds: number) {
 }
 
 export function StageMode({ set, tracks, onClose }: { set: MixSet; tracks: Track[]; onClose: () => void }) {
-  const { data, mutate, busy } = useWorkspace();
+  const { data, mutate, busy, setSelectedTrackId } = useWorkspace();
   const [index, setIndex] = useState(0);
   const [startedAt] = useState(() => Date.now());
   const [elapsed, setElapsed] = useState(0);
@@ -38,6 +38,9 @@ export function StageMode({ set, tracks, onClose }: { set: MixSet; tracks: Track
   const next = tracks[index + 1];
   const transition = next ? data.transitions.find((t) => t.fromTrackId === current.id && t.toTrackId === next.id) : undefined;
   const notes = set.tracks.find((item) => item.trackId === current?.id)?.notes;
+
+  // The stage backdrop follows the selected track, so its colour and pulse follow the set.
+  useEffect(() => { if (current) setSelectedTrackId(current.id); }, [current, setSelectedTrackId]);
 
   const go = useCallback((delta: number) => setIndex((value) => Math.min(tracks.length - 1, Math.max(0, value + delta))), [tracks.length]);
 

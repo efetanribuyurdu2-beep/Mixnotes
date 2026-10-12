@@ -1039,3 +1039,12 @@ button.rank-label small { overflow: hidden; color: var(--text-3); font-size: 11p
 .install-card p { margin: 2px 0 0; color: var(--text-2); font-size: 13px; }
 .install-card p svg { vertical-align: -2px; }
 .stats-panel, .camelot-card { scroll-margin-top: 74px; }
+.export-result { padding: 10px 12px; border: 1px solid #3f7d70; border-radius: 12px; background: #83d6ca10; font-size: 13px; }
+.export-result p { margin: 0; }
+.export-result a { color: var(--accent-discovery); }
+.export-result details { margin-top: 6px; color: var(--text-3); }
+.export-result ul { margin: 6px 0 0; padding-left: 18px; }
+.stem-attach { display: grid; gap: 8px; margin: 12px 0; padding: 12px; border: 1px solid #3f7d70; border-radius: 12px; }
+.stem-attach label { display: grid; gap: 4px; color: var(--text-3); font-size: 12px; }
+.billing-actions { display: grid; gap: 8px; margin-top: 12px; }
+.billing-state { margin: 0; color: var(--accent-discovery); font-weight: 650; }

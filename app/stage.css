@@ -1,0 +1,169 @@
+/* =====================================================================
+   SAHNE: gün batımındaki gece kulübü.
+   globals.css'ten SONRA yüklenir; mevcut stilleri bozmadan üstüne yazar.
+   Kapatmak için layout.tsx içindeki "./stage.css" satırını silmek yeter.
+   ===================================================================== */
+
+@property --stage-h { syntax: "<number>"; inherits: true; initial-value: 374; }
+
+:root {
+  --stage-h: 374;            /* şarkı tonu (sahne yayı: 262–402) */
+  --stage-s: 84%;
+  --stage-l: 58%;
+  --stage-bar: 1.9s;         /* bir ölçünün süresi, BPM'den gelir */
+  --stage-song: hsl(var(--stage-h) var(--stage-s) var(--stage-l));
+  --stage-song-soft: hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .34);
+  --stage-glass: rgba(27, 17, 34, .58);
+  --stage-glass-strong: rgba(22, 13, 29, .8);
+  --stage-edge: rgba(255, 205, 170, .15);
+  --stage-ease: cubic-bezier(.22, 1, .36, 1);
+  transition: --stage-h 1.4s ease; /* şarkı değişince renk yay üzerinde akar */
+}
+
+html, body { background: #0e0813; }
+.app-shell { position: relative; isolation: isolate; background: transparent; }
+
+/* ---------- Zemin ---------- */
+.stage-backdrop {
+  position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, #0c0615 0%, #1a0c26 36%, #2c1131 60%, #4b1e35 80%, #7b3429 100%);
+}
+.stage-sun {
+  position: absolute; left: -20vmax; right: -20vmax; bottom: -34vmax; height: 78vmax;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 176, 96, .62) 0%, rgba(255, 98, 112, .3) 36%, rgba(168, 52, 120, .12) 58%, transparent 72%);
+  animation: stage-breathe 10s ease-in-out infinite alternate; will-change: transform, opacity;
+}
+.stage-blob { position: absolute; border-radius: 50%; will-change: transform; }
+.stage-blob > i {
+  position: absolute; inset: 0; border-radius: inherit; will-change: transform, opacity;
+  animation: stage-pulse var(--stage-bar) cubic-bezier(.3, .8, .4, 1) infinite;
+}
+.stage-blob-song {
+  width: 78vmax; height: 78vmax; top: -26vmax; right: -22vmax;
+  animation: stage-drift-a 28s ease-in-out infinite alternate;
+}
+.stage-blob-song > i { background: radial-gradient(circle, hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .52) 0%, hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .16) 42%, transparent 68%); }
+.stage-blob-violet {
+  width: 64vmax; height: 64vmax; bottom: -22vmax; left: -22vmax;
+  animation: stage-drift-b 34s ease-in-out infinite alternate;
+}
+.stage-blob-violet > i { background: radial-gradient(circle, rgba(150, 60, 190, .36) 0%, rgba(110, 40, 160, .12) 44%, transparent 68%); animation-delay: calc(var(--stage-bar) / -2); }
+.stage-beams {
+  position: absolute; left: 50%; top: 38%; width: 170vmax; height: 170vmax; margin: -85vmax 0 0 -85vmax; opacity: .5;
+  background: conic-gradient(from 0deg, transparent 0 7%, var(--stage-song-soft) 9%, transparent 13% 32%, rgba(255, 150, 110, .2) 34%, transparent 38% 57%, var(--stage-song-soft) 59%, transparent 63% 82%, rgba(190, 90, 220, .18) 84%, transparent 88%);
+  -webkit-mask-image: radial-gradient(circle, transparent 6%, #000 20%, transparent 58%);
+  mask-image: radial-gradient(circle, transparent 6%, #000 20%, transparent 58%);
+  animation: stage-spin 70s linear infinite; will-change: transform;
+}
+.stage-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 38%, transparent 38%, rgba(8, 3, 12, .6) 100%); }
+
+@keyframes stage-pulse { 0% { transform: scale(1); opacity: .78; } 12% { transform: scale(1.07); opacity: 1; } 100% { transform: scale(1); opacity: .78; } }
+@keyframes stage-drift-a { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-7vmax, 9vmax, 0); } }
+@keyframes stage-drift-b { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(9vmax, -6vmax, 0); } }
+@keyframes stage-breathe { from { transform: scale(1); opacity: .8; } to { transform: scale(1.06); opacity: 1; } }
+@keyframes stage-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Cam yüzeyler ---------- */
+.app-topbar { background: rgba(18, 10, 24, .56); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); border-bottom-color: var(--stage-edge); }
+.left-rail { background: rgba(18, 10, 24, .4); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); border-right-color: var(--stage-edge); }
+.left-rail.mobile-open { background: rgba(18, 10, 24, .96); }
+.command-trigger { background: rgba(255, 255, 255, .04); border-color: var(--stage-edge); }
+.command-trigger:hover { border-color: hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .6); }
+
+.home-section, .workflow-line, .provider-card, .session-card, .recommendation-panel {
+  background: var(--stage-glass);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25); backdrop-filter: blur(14px) saturate(1.25);
+  border: 1px solid var(--stage-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 226, 200, .07), 0 22px 44px -28px rgba(0, 0, 0, .7);
+  transition: transform .5s var(--stage-ease), border-color .35s ease, box-shadow .5s var(--stage-ease);
+}
+.home-section { border-top: 2px solid var(--stage-song); }
+@media (hover: hover) {
+  .home-section:hover, .provider-card:hover, .session-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .45);
+    box-shadow: inset 0 1px 0 rgba(255, 226, 200, .1), 0 28px 50px -26px hsl(var(--stage-h) var(--stage-s) 40% / .55);
+  }
+}
+.workflow-line button { transition: background .3s ease, color .3s ease, transform .4s var(--stage-ease); }
+.workflow-line button:hover { background: hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .12); }
+.workflow-line button:active { transform: scale(.97); }
+.workflow-line button svg { color: var(--stage-song); }
+.workflow-line button strong { color: hsl(var(--stage-h) 85% 74%); }
+.workflow-line > i { background: repeating-linear-gradient(90deg, hsl(var(--stage-h) 80% 70% / .7) 0 2px, transparent 2px 5px); }
+
+/* ---------- Başlıklar ve butonlar (sahne paleti, turkuaz yok) ---------- */
+@supports (background-clip: text) {
+  .view-header h1, .brand-lockup strong {
+    background-image: linear-gradient(105deg, #ffd29a 0%, #ff9a8b 46%, hsl(var(--stage-h) 86% 74%) 100%);
+  }
+}
+.view-header::after { background: linear-gradient(90deg, #ffb28c88, hsl(var(--stage-h) 80% 66% / .5), transparent); }
+.button.primary, .button.primary:hover:not(:disabled) {
+  background: linear-gradient(110deg, #ffb066 0%, #ff7a85 55%, hsl(var(--stage-h) 82% 64%) 100%);
+  border-color: transparent; color: #2a0f14;
+}
+.button.primary { box-shadow: 0 8px 26px -12px var(--stage-song); transition: transform .35s var(--stage-ease), box-shadow .35s var(--stage-ease), filter .3s ease; }
+.button.primary:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.07); box-shadow: 0 16px 34px -12px var(--stage-song); }
+.button.primary:active:not(:disabled) { transform: translateY(0) scale(.98); }
+.button.secondary { background: rgba(255, 255, 255, .04); border-color: var(--stage-edge); transition: background .3s ease, border-color .3s ease, transform .35s var(--stage-ease); }
+.button.secondary:hover:not(:disabled) { background: rgba(255, 255, 255, .09); transform: translateY(-1px); }
+
+/* Logo: dengeleyici çubukları ölçüyle birlikte hareket eder */
+.signal-mark { border-color: hsl(var(--stage-h) 70% 60% / .55); }
+.signal-mark i { background: var(--stage-song); animation: stage-eq var(--stage-bar) ease-in-out infinite; }
+.signal-mark i:nth-child(2) { animation-delay: calc(var(--stage-bar) / -3); }
+.signal-mark i:nth-child(3) { animation-delay: calc(var(--stage-bar) / -1.5); }
+@keyframes stage-eq { 0%, 100% { transform: scaleY(.55); } 30% { transform: scaleY(1.15); } 60% { transform: scaleY(.75); } }
+
+/* ---------- Plak: ana sayfadaki büyük kart ---------- */
+.studio-overview {
+  background: radial-gradient(120% 150% at 100% 0%, hsl(var(--stage-h) var(--stage-s) 50% / .6) 0%, transparent 62%), linear-gradient(135deg, rgba(74, 26, 52, .86), rgba(26, 13, 38, .92));
+  border-color: var(--stage-edge); color: var(--text);
+}
+.studio-overview .overline, .studio-overview p:not(.overline), .studio-numbers span { color: rgba(255, 232, 218, .82); }
+.studio-numbers strong { color: #fff3ea; }
+@supports (background-clip: text) {
+  .studio-overview h2 { background-image: linear-gradient(105deg, #ffd29a, #ff9a8b 50%, hsl(var(--stage-h) 86% 78%)); }
+}
+.studio-overview .button.secondary { background: rgba(255, 255, 255, .06); border-color: rgba(255, 220, 200, .3); color: #ffeede; }
+.studio-overview::after {
+  background:
+    conic-gradient(from 0deg, transparent 0 10%, rgba(255, 255, 255, .09) 14%, transparent 22% 52%, rgba(255, 255, 255, .07) 60%, transparent 68%),
+    repeating-radial-gradient(circle, transparent 0 9px, rgba(255, 214, 190, .07) 10px 11px);
+  animation: stage-spin 16s linear infinite;
+}
+
+/* ---------- İçine dalma: sayfa geçişleri ---------- */
+.view { animation: stage-dive .7s var(--stage-ease) backwards; }
+@keyframes stage-dive { from { opacity: 0; transform: translateY(20px) scale(.985); } to { opacity: 1; transform: none; } }
+.home-view > * { animation: stage-rise .8s var(--stage-ease) backwards; }
+.home-view > :nth-child(2) { animation-delay: .06s; }
+.home-view > :nth-child(3) { animation-delay: .12s; }
+.home-view > :nth-child(4) { animation-delay: .18s; }
+.home-view > :nth-child(5) { animation-delay: .24s; }
+.home-view > :nth-child(6) { animation-delay: .3s; }
+@keyframes stage-rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Telefon ve düşük hareket ---------- */
+@media (max-width: 720px) {
+  .stage-beams { display: none; }
+  .home-section, .workflow-line, .provider-card, .session-card, .recommendation-panel { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .stage-blob-song { width: 110vmax; height: 110vmax; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-beams { display: none; }
+  .stage-sun, .stage-blob, .stage-blob > i, .signal-mark i, .studio-overview::after { animation: none !important; }
+  .view, .home-view > * { animation: none !important; }
+  :root { transition: none; }
+}
+@media (prefers-contrast: more), (forced-colors: active) {
+  .stage-backdrop { display: none; }
+  .home-section, .workflow-line { background: var(--surface-panel); }
+}
+
+/* Sahne modu, zeminin şarkı rengini ve ölçü nabzını paylaşır. */
+.stage-mode { background: radial-gradient(120% 80% at 50% 0%, hsl(var(--stage-h) var(--stage-s) 30% / .55) 0%, transparent 72%), #0e0813; }
+.stage-progress i.now { background: var(--stage-song); }
+.stage-clock { color: hsl(var(--stage-h) 90% 72%); }
+.stage-now h1 { text-shadow: 0 0 60px hsl(var(--stage-h) var(--stage-s) var(--stage-l) / .35); }

@@ -1,8 +1,8 @@
 "use client";
 import { L, Localized } from "./localized";
 
-import { useState } from "react";
-import { Download, FileText, ListMusic, Disc3 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, ExternalLink, FileText, ListMusic, Disc3, Music4 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useWorkspace } from "./workspace-context";
 import { buildM3U, buildRekordboxXml, safeFileName } from "@/lib/playlist-export";
@@ -14,9 +14,31 @@ const folderKey = "mixnotes.export.folder";
 function storedFolder() { try { return localStorage.getItem(folderKey) ?? ""; } catch { return ""; } }
 
 export function SetExportDialog({ set, tracks, open, onOpenChange, onNotes }: { set: MixSet; tracks: Track[]; open: boolean; onOpenChange: (open: boolean) => void; onNotes: () => void }) {
-  const { data } = useWorkspace();
+  const { data, setView } = useWorkspace();
   const [folder, setFolder] = useState(storedFolder);
   const [working, setWorking] = useState(false);
+  const [spotify, setSpotify] = useState<"unknown" | "connected" | "disconnected">("unknown");
+  const [spotifyResult, setSpotifyResult] = useState<{ url: string; added: number; unmatched: string[] } | null>(null);
+  const [spotifyError, setSpotifyError] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    fetch("/api/spotify/status", { cache: "no-store" }).then((r) => r.json() as Promise<{ connected?: boolean }>)
+      .then((v) => { if (live) setSpotify(v.connected ? "connected" : "disconnected"); })
+      .catch(() => { if (live) setSpotify("disconnected"); });
+    return () => { live = false; };
+  }, []);
+
+  async function exportToSpotify() {
+    setWorking(true); setSpotifyError(""); setSpotifyResult(null);
+    try {
+      const response = await fetch("/api/spotify/export-set", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ setId: set.id }) });
+      const body = await response.json() as { url?: string; added?: number; unmatched?: string[]; error?: string };
+      if (!response.ok || !body.url) throw new Error(body.error || "Spotify playlist oluşturulamadı. Tekrar dene.");
+      setSpotifyResult({ url: body.url, added: body.added ?? 0, unmatched: body.unmatched ?? [] });
+    } catch (cause) { setSpotifyError(cause instanceof Error ? cause.message : "Spotify playlist oluşturulamadı. Tekrar dene."); }
+    finally { setWorking(false); }
+  }
 
   // Attached audio keeps the DJ's real file names, which is what DJ software matches on.
   async function attachedNames() {
@@ -62,6 +84,24 @@ export function SetExportDialog({ set, tracks, open, onOpenChange, onNotes }: { 
               <ListMusic size={20} /><strong>M3U8 playlist</strong>
               <small><L text="Serato, Traktor, VirtualDJ ve Engine DJ'de playlist olarak açılır." /></small>
             </button>
+            {spotify === "connected" ? (
+              <button className="export-option" disabled={working} onClick={exportToSpotify}>
+                <Music4 size={20} /><strong><L text="Spotify playlist" /></strong>
+                <small><L text="Sırayla özel bir Spotify playlist'i oluşturur. Spotify bağlantısı olan parçalar doğrudan, diğerleri aramayla eşlenir." /></small>
+              </button>
+            ) : spotify === "disconnected" ? (
+              <button className="export-option" onClick={() => { onOpenChange(false); setView("discover"); }}>
+                <Music4 size={20} /><strong><L text="Spotify playlist" /></strong>
+                <small><L text="Önce Discover'da Spotify hesabını bağla." /></small>
+              </button>
+            ) : null}
+            {spotifyResult && (
+              <div className="export-result" role="status">
+                <p><L text="Playlist hazır:" /> {spotifyResult.added} <L text="parça eklendi." /> <a href={spotifyResult.url} target="_blank" rel="noreferrer"><L text="Spotify'da aç" /> <ExternalLink size={12} /></a></p>
+                {spotifyResult.unmatched.length > 0 && <details><summary>{spotifyResult.unmatched.length} <L text="parça bulunamadı" /></summary><ul>{spotifyResult.unmatched.map((t) => <li key={t}>{t}</li>)}</ul></details>}
+              </div>
+            )}
+            {spotifyError && <p className="inline-error" role="alert"><L text={spotifyError} /></p>}
             <button className="export-option" onClick={() => { onNotes(); onOpenChange(false); }}>
               <FileText size={20} /><strong><L text="Set notları (TXT)" /></strong>
               <small><L text="Sıra, BPM/key, cue notları ve geçiş teknikleri; yazdırmak için." /></small>

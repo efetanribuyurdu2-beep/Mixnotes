@@ -1,8 +1,10 @@
 import { env } from 'cloudflare:workers';
 import { database } from './raw';
+import { activeSubscription } from './billing';
 export async function membershipFor(owner:string){
   const email=(env as unknown as Record<string,string>).MIXNOTES_FOUNDER_EMAIL?.trim().toLowerCase();
   if(email){const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(email));const founder=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('');if(owner===founder)return {plan:'founder' as const,fullAccess:true};}
+  if((await activeSubscription(owner))?.active)return {plan:'pro' as const,fullAccess:true};
   return {plan:'free' as const,fullAccess:false};
 }
 export class PlanError extends Error {}

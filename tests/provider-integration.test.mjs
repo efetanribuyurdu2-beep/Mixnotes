@@ -24,3 +24,28 @@ test('appended Spotify migration creates only its two tables',async()=>{const te
 test('existing Spotify records regain covers without changing DJ notes or another user’s data',async()=>{
  const sql=setup(),id=await owner(),track=crypto.randomUUID();sql.prepare("INSERT INTO tracks(owner_id,id,title,artist,notes,cue_notes,date_added,updated_at) VALUES (?,?, 'My edit','Custom artist','Keep my note','0:12','','')").run(id,track);sql.prepare("INSERT INTO track_sources(owner_id,id,track_id,provider,external_url,created_at) VALUES (?,?,?,'Spotify',?,'')").run(id,'source',track,'https://open.spotify.com/track/'+song);await server.saveConnection({owner:id,client,access:'secret',refresh:'refresh',expires:Date.now()+3600000});const original=globalThis.fetch;let calls=0;globalThis.fetch=async(url)=>{calls++;assert.equal(url,'https://api.spotify.com/v1/tracks/'+song);return Response.json({type:'track',id:song,name:'Official song',artists:[{name:'Artist'}],duration_ms:240000,album:{name:'Album',release_date:'2026-01-01',images:[{url:'https://i.scdn.co/image/cover'}]}});};try{await assert.rejects(()=>server.refreshSpotifyMetadata('other',[track]),/sana ait/);assert.equal(calls,0);await server.refreshSpotifyMetadata(id,[track]);assert.equal(calls,1);const row=sql.prepare('SELECT * FROM tracks WHERE id=?').get(track);assert.equal(row.title,'My edit');assert.equal(row.artist,'Custom artist');assert.equal(row.notes,'Keep my note');assert.equal(row.cue_notes,'0:12');assert.equal(row.duration_seconds,240);const metadata=JSON.parse(sql.prepare('SELECT payload FROM track_link_metadata WHERE track_id=?').get(track).payload);assert.equal(metadata.artworkUrl,'https://i.scdn.co/image/cover');assert.equal(metadata.album,'Album');assert.equal(row.revision,2);}finally{globalThis.fetch=original;}
 });
+
+test('set export builds a private playlist from linked sources and search, reporting misses',async()=>{
+ const sql=setup(),id=await owner();await server.saveConnection({owner:id,client,access:'token',refresh:'refresh',expires:Date.now()+3600000});
+ const set=crypto.randomUUID(),[linked,searched,missing]=[crypto.randomUUID(),crypto.randomUUID(),crypto.randomUUID()];
+ sql.prepare("INSERT INTO mix_sets(owner_id,id,title,created_at,updated_at) VALUES (?,?,'Friday','','')").run(id,set);
+ for(const [i,[track,title,artist]] of [[linked,'Linked','A'],[searched,'Found "It"','B feat. C'],[missing,'Nowhere','D']].entries()){sql.prepare("INSERT INTO tracks(owner_id,id,title,artist,date_added,updated_at) VALUES (?,?,?,?,'','')").run(id,track,title,artist);sql.prepare("INSERT INTO set_tracks(owner_id,set_id,track_id,position,added_at) VALUES (?,?,?,?,'')").run(id,set,track,i);}
+ sql.prepare("INSERT INTO track_sources(owner_id,id,track_id,provider,external_url,created_at) VALUES (?,?,?,'Spotify',?,'')").run(id,'s1',linked,'https://open.spotify.com/track/'+song);
+ const original=globalThis.fetch,calls=[];
+ globalThis.fetch=async(url,options={})=>{const u=new URL(String(url));calls.push({path:u.pathname,q:u.searchParams.get('q'),method:options.method||'GET',body:options.body&&JSON.parse(options.body)});
+  if(u.pathname==='/v1/search')return Response.json({tracks:{items:u.searchParams.get('q').includes('Found')?[{type:'track',id:'1'.repeat(22),name:'Found It',artists:[{name:'B'}]}]:[]}});
+  if(u.pathname==='/v1/me/playlists')return Response.json({id:'P'.repeat(22)});
+  if(u.pathname===`/v1/playlists/${'P'.repeat(22)}/items`)return Response.json({snapshot_id:'x'});
+  return new Response('no',{status:500});};
+ try{
+  const response=await post('export-set',{setId:set});const body=await response.json();
+  assert.equal(response.status,200);assert.equal(body.added,2);assert.deepEqual(body.unmatched,['D - Nowhere']);assert.equal(body.url,'https://open.spotify.com/playlist/'+'P'.repeat(22));
+  assert.equal(calls.find(c=>c.path==='/v1/me/playlists').body.public,false);
+  assert.deepEqual(calls.find(c=>c.path.endsWith('/items')).body.uris,['spotify:track:'+song,'spotify:track:'+'1'.repeat(22)]);
+  assert.equal(calls.filter(c=>c.path==='/v1/search').length,2);
+  assert.equal(calls.find(c=>c.q?.includes('Found')).q,'track:Found  It artist:B');
+  assert.equal((await post('export-set',{setId:set},'other@example.com')).status,404);
+  globalThis.fetch=async(url)=>String(url).includes('/me/playlists')?new Response('',{status:403}):Response.json({tracks:{items:[]}});
+  const denied=await post('export-set',{setId:set});assert.equal(denied.status,403);assert.match((await denied.json()).error,/yeniden bağla/);
+ }finally{globalThis.fetch=original;}
+});

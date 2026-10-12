@@ -1,7 +1,7 @@
 import {identityFromRequest} from '@/db/workspace';
 import {membershipFor} from '@/db/membership';
 import {database} from '@/db/raw';
-import {clientId,randomToken,challenge,seal,unseal,loadConnection,saveConnection,tokenRequest,spotifyGet,mapSpotifyTrack,spotifyScopes,SpotifyError} from '@/lib/spotify-server';
+import {clientId,randomToken,challenge,seal,unseal,loadConnection,saveConnection,tokenRequest,spotifyGet,mapSpotifyTrack,spotifyScopes,SpotifyError,exportSetToSpotify} from '@/lib/spotify-server';
 type Context={params:Promise<{operation:string}>};
 const cookieName='__Host-mixnotes-spotify-pkce';
 const cookie=(value:string,age:number)=>`${cookieName}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}`;
@@ -34,6 +34,7 @@ export async function GET(request:Request,context:Context){const user=await iden
  return json({error:'Not found'},404);
  }catch(e){if(operation==='callback')return returnHome(request,'failed');return json({error:e instanceof SpotifyError?e.message:'Spotify bağlantısı tamamlanamadı.'},e instanceof SpotifyError?e.status:503);}}
 export async function POST(request:Request,context:Context){if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return json({error:'Forbidden'},403);const user=await identityFromRequest(request);if(!user)return json({error:'Unauthorized'},401);const {operation}=await context.params;
+ if(operation==='export-set'){try{const text=await request.text();if(text.length>500)return json({error:'Bilgileri kontrol et.'},413);const {setId}=JSON.parse(text) as {setId?:unknown};if(typeof setId!=='string'||!/^[0-9a-f-]{36}$/i.test(setId))return json({error:'Set bulunamadı.'},400);return json(await exportSetToSpotify(user.id,setId));}catch(e){if(e instanceof SpotifyError)return json({error:e.message},e.status);console.error('Spotify set export failed',e);return json({error:'Spotify playlist oluşturulamadı. Tekrar dene.'},502);}}
  if(operation==='disconnect'){await database().prepare('DELETE FROM spotify_connections WHERE owner_id=?').bind(user.id).run();return json({connected:false});}
  if(operation==='config'){
   if((await membershipFor(user.id)).plan!=='founder')return json({error:'Forbidden'},403);try{const text=await request.text();if(text.length>1000)return json({error:'Bilgileri kontrol et.'},413);const {clientId:client}=JSON.parse(text) as {clientId?:unknown};if(typeof client!=='string'||!/^[a-fA-F0-9]{32}$/.test(client.trim()))return json({error:'Spotify Web API uygulamasının 32 karakterlik Client ID bilgisini gir. Soloist anahtarı bu alanda kullanılamaz.'},400);await database().prepare("INSERT INTO spotify_settings(id,client_id) VALUES ('app',?) ON CONFLICT(id) DO UPDATE SET client_id=excluded.client_id").bind(client.trim()).run();return json({configured:true});}catch{return json({error:'Client ID kaydedilemedi.'},400);}
