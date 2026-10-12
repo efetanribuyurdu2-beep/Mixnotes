@@ -23,6 +23,7 @@ import { HarmonicBadge, SetOptimizer, StageMode } from "./set-stage";
 import { SetTemplateDialog } from "./set-template-dialog";
 import { SetExportDialog } from "./set-export-dialog";
 import { SetShareDialog } from "./set-share-dialog";
+import { useQuickCommands } from "./pending-command";
 import { ReorderActions, TrackStrip } from "./track-strip";
 import { useWorkspace } from "./workspace-context";
 import { recommendNext } from "@/lib/dj-logic";
@@ -83,6 +84,14 @@ export function SetsView() {
   const [exportOpen, setExportOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const active = data.sets.find((set) => set.id === selectedSetId) ?? data.sets[0];
+  useQuickCommands(["stage", "optimize", "template", "share", "export"], (command) => {
+    if (command === "template") { setTemplateOpen(true); return; }
+    if (!active?.tracks.length) return;
+    if (command === "stage") setStageOpen(true);
+    if (command === "optimize" && active.tracks.length > 2) setOptimizerOpen(true);
+    if (command === "share") setShareOpen(true);
+    if (command === "export") setExportOpen(true);
+  });
   const trackById = new Map(data.tracks.map((track) => [track.id, track]));
   const orderedTracks = active?.tracks.map((item) => trackById.get(item.trackId)).filter(Boolean) as Track[] ?? [];
   const setTrackIds = new Set(active?.tracks.map((item) => item.trackId) ?? []);

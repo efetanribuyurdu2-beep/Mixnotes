@@ -780,6 +780,37 @@ Bağlantı kopyalandı|Link copied
 Kopyalanamadı; bağlantıyı seçip kopyala.|Could not copy; select the link and copy it.
 Paylaşım bağlantısı oluşturuldu|Share link created
 Paylaşım bağlantısı kaldırıldı|Share link removed
+İSTATİSTİKLER|STATS
+Hazırlık nabzın|Your prep pulse
+PROVA SERİSİ|PRACTICE STREAK
+gün|days
+SON 30 GÜN|LAST 30 DAYS
+PERFORMANS|PERFORMANCES
+HAZIR GEÇİŞ|READY TRANSITIONS
+Son 12 hafta|Last 12 weeks
+Pzt|Mon
+Çar|Wed
+Cum|Fri
+Az|Less
+Çok|More
+Bir güne dokun; o günkü prova süresini gör.|Tap a day to see its practice time.
+Library BPM dağılımı|Library BPM spread
+Bir sütuna dokun; o tempo aralığındaki parça sayısını gör.|Tap a column to see how many tracks sit in that tempo range.
+BPM bilgisi olan Library parçası yok.|No Library tracks with BPM yet.
+En çok kullandığın key'ler|Your most used keys
+Key'leri Camelot formatında (ör. 8A) gir ya da ses dosyasından analiz et.|Enter keys in Camelot format (e.g. 8A) or analyze them from audio.
+Camelot çarkında gör|See on the Camelot wheel
+En çok çaldığın parçalar|Your most played tracks
+Sahne modundan performans kaydettiğinde en çok çaldığın parçalar burada görünür.|Log performances from stage mode and your most played tracks appear here.
+MixNotes'u ana ekrana ekle|Add MixNotes to your home screen
+Safari'de Paylaş|In Safari, tap Share
+› Ana Ekrana Ekle'ye dokun. Tam ekran açılır, internet yokken de son kopyan görünür.|› Add to Home Screen. It opens full screen and shows your last copy even without internet.
+Tam ekran açılır, kabinde internet yokken de son kopyan görünür.|Opens full screen and shows your last copy even with no internet in the booth.
+Yükle|Install
+Kapat|Close
+Sahne modunu aç|Open stage mode
+Seti dışa aktar|Export set
+İstatistikler|Stats
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){

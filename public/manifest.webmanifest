@@ -1,0 +1,21 @@
+{
+  "name": "MixNotes — DJ Studio",
+  "short_name": "MixNotes",
+  "description": "Keşfet, set hazırla, geçişlerini prova et.",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#141217",
+  "theme_color": "#19151d",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Discover", "url": "/?listen=discover", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Transition Lab", "url": "/?listen=practice", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

@@ -31,6 +31,8 @@ import type { WorkspaceData, WorkspaceView } from "@/lib/workspace-types";
 import { PlansView, StudioToolsView } from "./studio-tools";
 import { DiscoverView } from "./discover-view";
 import { ProfileAvatar } from "./profile-avatar";
+import { useServiceWorker } from "./install-app";
+import { queueCommand, type QuickCommand } from "./pending-command";
 import { PracticeView } from "./practice-view";
 import { TransferView } from "./transfer-view";
 import { CratesView } from "./crates-view";
@@ -99,6 +101,7 @@ function readWorkspaceSnapshot() {
 }
 
 export function WorkspaceApp() {
+  useServiceWorker();
   const [data, setData] = useState<WorkspaceData | null>(null);
   useEffect(() => { const url=new URL(window.location.href);const listen=url.searchParams.get('listen');if(listen==='discover'||listen==='practice'){setView(listen);url.searchParams.delete('listen');window.history.replaceState(null,'',url.pathname+url.search+url.hash);}const result=url.searchParams.get('spotify');if(!result)return;setView('discover');const message=result==='connected'?'Spotify hesabın bağlı.':result==='cancelled'?'Spotify bağlantısı iptal edildi.':'Spotify bağlantısı tamamlanamadı. Ayarları kontrol edip yeniden dene.';if(result==='connected')toast.success(message);else toast.error(message);url.searchParams.delete('spotify');window.history.replaceState(null,'',url.pathname+url.search+url.hash);},[]);
   useEffect(() => { document.documentElement.lang = data?.profile.language ?? "tr"; }, [data?.profile.language]);
@@ -231,10 +234,24 @@ export function WorkspaceApp() {
   const commandResults = useMemo<CommandResult[]>(() => {
     if (!data) return [];
     const closeAnd = (run: () => void) => () => { run(); setCommandOpen(false); setCommandQuery(""); };
+const activeSetId = selectedSetId || data.sets[0]?.id || "";
+    const onSet = (command: QuickCommand) => () => { if (activeSetId) setSelectedSetId(activeSetId); setView("sets"); queueCommand(command); };
+    const onView = (target: WorkspaceView, command?: QuickCommand) => () => { setView(target); if (command) queueCommand(command); };
     const results: CommandResult[] = [
       { id: "add-track", type: "action", title: "Library’ye parça ekle", subtitle: "Yeni kayıt", run: closeAnd(() => setEditor({ kind: "track", origin: "library" })) },
       { id: "add-set", type: "action", title: "Yeni set oluştur", subtitle: "Set Builder", run: closeAnd(() => setEditor({ kind: "set" })) },
       { id: "add-transition", type: "action", title: "Geçiş kaydet", subtitle: "Transition Memory", run: closeAnd(() => setEditor({ kind: "transition" })) },
+      ...(activeSetId && data.sets.find((set) => set.id === activeSetId)?.tracks.length ? [
+        { id: "quick-stage", type: "action" as const, title: "Sahne modunu aç", subtitle: data.sets.find((set) => set.id === activeSetId)!.title, run: closeAnd(onSet("stage")) },
+        { id: "quick-optimize", type: "action" as const, title: "Akışı optimize et", subtitle: data.sets.find((set) => set.id === activeSetId)!.title, run: closeAnd(onSet("optimize")) },
+        { id: "quick-share", type: "action" as const, title: "Seti paylaş", subtitle: data.sets.find((set) => set.id === activeSetId)!.title, run: closeAnd(onSet("share")) },
+        { id: "quick-export", type: "action" as const, title: "Seti dışa aktar", subtitle: "Rekordbox · M3U8", run: closeAnd(onSet("export")) },
+      ] : []),
+      { id: "quick-template", type: "action", title: "Şablondan set oluştur", subtitle: "Set Builder", run: closeAnd(onSet("template")) },
+      { id: "quick-tap", type: "action", title: "Tap BPM", subtitle: "DJ Toolbox", run: closeAnd(onView("tools", "tap")) },
+      { id: "quick-camelot", type: "action", title: "Camelot çarkı", subtitle: "DJ Toolbox", run: closeAnd(onView("tools", "camelot")) },
+      { id: "quick-practice", type: "action", title: "Prova kaydet", subtitle: "Transition Lab", run: closeAnd(onView("practice")) },
+      { id: "quick-stats", type: "action", title: "İstatistikler", subtitle: "Workspace", run: closeAnd(onView("home", "stats")) },
       ...data.tracks.map((track) => ({ id: `track-${track.id}`, type: "track" as const, title: track.title, subtitle: `${track.artist || "Sanatçı yok"} · ${track.bpm ?? "—"} BPM`, run: closeAnd(() => { setSelectedTrackId(track.id); setView("library"); }) })),
       ...data.crates.map((crate) => ({ id: `crate-${crate.id}`, type: "crate" as const, title: crate.name, subtitle: `${crate.trackIds.length} parça`, run: closeAnd(() => { setSelectedCrateId(crate.id); setView("crates"); }) })),
       ...data.sets.map((set) => ({ id: `set-${set.id}`, type: "set" as const, title: set.title, subtitle: `${set.tracks.length} parça · ${set.genre || "Tür yok"}`, run: closeAnd(() => { setSelectedSetId(set.id); setView("sets"); }) })),
@@ -242,7 +259,7 @@ export function WorkspaceApp() {
     ];
     const needle = commandQuery.trim().toLocaleLowerCase("tr-TR");
     return results.filter((result) => !needle || `${result.type === "action" ? translateUi(result.title,data.profile.language??"tr") : result.title} ${result.subtitle}`.toLocaleLowerCase(data.profile.language === "en" ? "en-US" : "tr-TR").includes(needle)).slice(0, 18);
-  }, [data, commandQuery]);
+  }, [data, commandQuery, selectedSetId]);
 
   if (loading) {
     return <div className="app-loading"><div className="loading-brand"><span className="signal-mark"><i /><i /><i /></span><strong>mixnotes</strong></div><Skeleton className="h-10 w-52" /><Skeleton className="h-64 w-full" /><p><L text={"Hazırlık alanın kuruluyor…"}/></p></div>;

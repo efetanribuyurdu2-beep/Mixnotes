@@ -1,4 +1,4 @@
-import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const legacySets = sqliteTable("dj_sets", {
   id: text("id").primaryKey(),
@@ -158,3 +158,4 @@ export const cloudAudio=sqliteTable('cloud_audio',{ownerId:text('owner_id').notN
 export const planSettings=sqliteTable('plan_settings',{id:text('id').primaryKey(),payload:text('payload').notNull(),revision:integer('revision').notNull().default(1)});
 export const spotifySettings=sqliteTable('spotify_settings',{id:text('id').primaryKey(),clientId:text('client_id').notNull()});
 export const spotifyConnections=sqliteTable('spotify_connections',{ownerId:text('owner_id').primaryKey(),payload:text('payload').notNull(),updatedAt:text('updated_at').notNull()});
+export const setShares=sqliteTable('set_shares',{token:text('token').primaryKey(),ownerId:text('owner_id').notNull(),setId:text('set_id').notNull(),createdAt:text('created_at').notNull()},t=>[uniqueIndex('set_shares_owner_set_idx').on(t.ownerId,t.setId)]);

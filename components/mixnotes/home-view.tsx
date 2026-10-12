@@ -1,5 +1,7 @@
 "use client";
 import {L,Localized} from "./localized";
+import { StatsPanel } from "./stats-panel";
+import { InstallAppCard } from "./install-app";
 
 import { ArrowRight, Boxes, ListMusic, Plus, Repeat2, Search, Sparkles } from "lucide-react";
 import { TrackStrip } from "./track-strip";
@@ -101,6 +103,8 @@ export function HomeView() {
       </div>
 
       <section className="studio-overview"><div><p className="overline">THE DJ WORKSPACE</p><h2><L text={"Keşiften sahneye."}/></h2><p><L text={"Parçalarını bul, akışını kur, prova et. Her karar bir sonraki setine kalsın."}/></p><div className="header-actions"><button className="button primary" onClick={()=>setView("discover")}><L text={"Discover’ı aç "}/><ArrowRight size={16}/></button><button className="button secondary" onClick={()=>setView("practice")}><L text={"Prova kaydet"}/></button></div></div><div className="studio-numbers"><span><strong>{data.tracks.length}</strong><L text={"PARÇA"}/></span><span><strong>{(data.sessions??[]).reduce((n,s)=>n+s.durationMinutes,0)}</strong><L text={"PROVA / SAHNE DK"}/></span></div></section>
+      <InstallAppCard />
+      <StatsPanel />
       <section className="home-section recent-section">
         <div className="section-title-row">
           <div><p className="overline"><L text={"SON EKLENENLER"}/></p><h2><L text={"Hazırlık kuyruğun"}/></h2></div>

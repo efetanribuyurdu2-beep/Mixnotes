@@ -6,6 +6,7 @@ import { RotateCcw } from "lucide-react";
 import { useWorkspace } from "./workspace-context";
 import { compatibleKeys, harmonicMatch, parseCamelot } from "@/lib/set-flow";
 import { beatTimings, tapTempo } from "@/lib/tap-tempo";
+import { useQuickCommands } from "./pending-command";
 
 const keyNames: Record<string, string> = {
   "1A": "A♭m", "2A": "E♭m", "3A": "B♭m", "4A": "Fm", "5A": "Cm", "6A": "Gm", "7A": "Dm", "8A": "Am", "9A": "Em", "10A": "Bm", "11A": "F♯m", "12A": "D♭m",
@@ -17,6 +18,8 @@ export function TapTempo() {
   const [taps, setTaps] = useState<number[]>([]);
   const [pulse, setPulse] = useState(false);
   const pulseTimer = useRef<number | undefined>(undefined);
+  const pad = useRef<HTMLButtonElement>(null);
+  useQuickCommands(["tap"], () => { pad.current?.scrollIntoView({ behavior: "smooth", block: "center" }); pad.current?.focus({ preventScroll: true }); });
   const bpm = tapTempo(taps);
   const nearby = bpm ? data.tracks.filter((t) => t.bpm !== null && Math.abs(t.bpm - bpm) <= 3).sort((a, b) => Math.abs(a.bpm! - bpm) - Math.abs(b.bpm! - bpm)).slice(0, 5) : [];
 
@@ -33,6 +36,7 @@ export function TapTempo() {
       <h3><L text="Tap BPM" /></h3>
       <p><L text="Ritme dokun; son vuruşların ortalaması BPM'i verir. 2 saniye beklersen yeniden başlar." /></p>
       <button
+        ref={pad}
         className={`tap-pad${pulse ? " is-pulse" : ""}`}
         onPointerDown={(event) => { event.preventDefault(); tap(); }}
         onKeyDown={(event) => { if (event.key === " " || event.key === "Enter" || event.key.toLowerCase() === "t") { event.preventDefault(); if (!event.repeat) tap(); } }}
@@ -72,6 +76,8 @@ function segmentPath(index: number, inner: number, outer: number) {
 export function CamelotWheel() {
   const { data, setSelectedTrackId, setView } = useWorkspace();
   const [selected, setSelected] = useState("8A");
+  const card = useRef<HTMLElement>(null);
+  useQuickCommands(["camelot"], () => card.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     for (const t of data.tracks) { const key = parseCamelot(t.musicalKey); if (key) { const id = `${key.number}${key.letter}`; map.set(id, (map.get(id) ?? 0) + 1); } }
@@ -82,7 +88,7 @@ export function CamelotWheel() {
   const matches = data.tracks.filter((t) => compatible.has(`${parseCamelot(t.musicalKey)?.number}${parseCamelot(t.musicalKey)?.letter}`)).sort((a, b) => b.rating - a.rating).slice(0, 8);
 
   return (
-    <section className="tool-card camelot-card">
+    <section ref={card} className="tool-card camelot-card">
       <h3><L text="Camelot çarkı" /></h3>
       <p><L text="Bir key seç; uyumlu key'ler ve Library'deki karşılıkları öne çıkar. Halka ne kadar doluysa o key'de o kadar parçan var." /></p>
       <div className="camelot-layout">
