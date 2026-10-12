@@ -1,0 +1,5 @@
+"use client";
+import {useWorkspace} from './workspace-context';
+import {L} from './localized';
+const isSpotify=(url:string)=>{try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='open.spotify.com'&&/^\/(?:intl-[a-z]+\/)?track\/[a-zA-Z0-9]{22}\/?$/.test(u.pathname);}catch{return false;}};
+export function SpotifyMetadataRefresh(){const {data,mutate,busy}=useWorkspace();const missing=data.tracks.filter(t=>t.sources.some(s=>isSpotify(s.externalUrl))&&(!t.linkMetadata?.artworkUrl||!t.linkMetadata?.album));if(!missing.length)return null;return <div className="spotify-metadata-refresh"><p><L text="Önceden aktarılan Spotify parçalarının kapak ve albüm bilgilerini tamamla. Spotify hesabın bağlı olmalı; DJ notların ve cue ayarların korunur."/></p><button className="button secondary" disabled={busy} onClick={()=>void mutate({type:'spotify.metadata.refresh',ids:missing.slice(0,5).map(t=>t.id)},'Spotify kapak ve bilgileri yenilendi')}><L text={busy?'Bilgiler güncelleniyor…':'Spotify kapak ve bilgilerini tamamla'}/> ({Math.min(5,missing.length)}/{missing.length})</button></div>;}

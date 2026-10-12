@@ -1,0 +1,6 @@
+"use client";
+import {useEffect,useState} from 'react';
+import type {AuditionSettings} from '@/lib/transition-audio';
+export type Recipe={id:string;name:string;from:string;to:string;settings:AuditionSettings;rating:number;note:string;date:string};
+export type Notebook={recipes:Recipe[];checklists:Record<string,boolean>;techniques:{name:string;note:string}[]};
+export function useNotebook(owner:string){const [state,setState]=useState<{notebook:Notebook;revision:number}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);useEffect(()=>{let live=true;setState(null);fetch('/api/studio').then(r=>{if(!r.ok)throw Error('Not defteri yüklenemedi.');return r.json() as Promise<{notebook:Notebook;revision:number}>;}).then(v=>{if(live)setState(v);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[owner]);async function save(notebook:Notebook){if(!state||busy)return false;setBusy(true);setError('');try{const r=await fetch('/api/studio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({notebook,revision:state.revision})});const v=await r.json() as {notebook:Notebook;revision:number;error?:string};if(!r.ok)throw Error(v.error);setState(v);return true;}catch(e){setError((e as Error).message);return false;}finally{setBusy(false);}}return {notebook:state?.notebook,save,error,busy};}
