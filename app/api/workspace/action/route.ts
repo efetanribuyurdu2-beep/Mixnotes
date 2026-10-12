@@ -29,6 +29,7 @@ import {
   WorkspaceError,
 } from "@/db/workspace";
 import { z } from "zod";
+import { ShareError, shareSet, unshareSet } from "@/db/set-shares";
 
 const shortText = z.string().trim().max(200);
 const notes = z.string().max(10_000);
@@ -111,11 +112,13 @@ const actionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("crate.delete"), id, expectedRevision: z.number().int().positive() }),
   z.object({ type: z.literal("crate.track.add"), crateId: id, trackId: id }),
   z.object({ type: z.literal("crate.track.remove"), crateId: id, trackId: id }),
-  z.object({ type: z.literal("set.create"), input: setInput }),
+  z.object({ type: z.literal("set.create"), input: setInput, trackIds: z.array(id).max(200).optional() }),
   z.object({ type: z.literal("set.update"), id, expectedRevision: z.number().int().positive(), input: setInput }),
   z.object({ type: z.literal("set.delete"), id, expectedRevision: z.number().int().positive() }),
   z.object({ type: z.literal("set.track.add"), setId: id, trackId: id }),
   z.object({ type: z.literal("set.track.remove"), setId: id, trackId: id }),
+  z.object({ type: z.literal("set.share"), setId: id }),
+  z.object({ type: z.literal("set.unshare"), setId: id }),
   z.object({ type: z.literal("set.reorder"), setId: id, trackIds: z.array(id).max(500) }),
   z.object({ type: z.literal("transition.create"), input: transitionInput }),
   z.object({
@@ -182,8 +185,10 @@ export async function POST(request: Request) {
       case "crate.track.remove":
         await removeTrackFromCrate(identity.id, action.crateId, action.trackId);
         break;
+      case "set.share": await shareSet(identity.id, action.setId); break;
+      case "set.unshare": await unshareSet(identity.id, action.setId); break;
       case "set.create":
-        await createSet(identity.id, action.input);
+        await createSet(identity.id, action.input, action.trackIds);
         break;
       case "set.update":
         await updateSet(identity.id, action.id, action.expectedRevision, action.input);
@@ -217,7 +222,7 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: "Bilgileri kontrol et; zorunlu veya hatalı bir alan var." }, { status: 400 });
     }
-    if (error instanceof SpotifyError || error instanceof WorkspaceError || error instanceof ExtensionError) {
+    if (error instanceof SpotifyError || error instanceof WorkspaceError || error instanceof ExtensionError || error instanceof ShareError) {
       return Response.json({ error: error.message }, { status: error.status });
     }
     console.error("Workspace action failed", error);

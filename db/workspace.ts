@@ -2,6 +2,7 @@ import { membershipFor } from "@/db/membership";
 import { matchesRule } from "@/lib/dj-logic";
 import { readExtensions } from "@/db/workspace-extensions";
 import { database } from "@/db/raw";
+import { shareSchemaStatements, shareTokens } from "@/db/set-shares";
 import type {
   CrateInput,
   SetInput,
@@ -202,6 +203,7 @@ export const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS plan_settings (id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, revision INTEGER DEFAULT 1 NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS spotify_connections (owner_id TEXT PRIMARY KEY NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS spotify_settings (id TEXT PRIMARY KEY NOT NULL, client_id TEXT NOT NULL)`,
+  ...shareSchemaStatements,
 ];
 
 export async function identityFromRequest(request: Request): Promise<Identity | null> {
@@ -500,7 +502,7 @@ export async function readWorkspace(identity: Identity, importedSets?: number): 
     setTracks.set(setId, tracks);
   }
 
-  const extensions = await readExtensions(db, identity.id);
+  const [extensions, shares] = await Promise.all([readExtensions(db, identity.id), shareTokens(identity.id)]);
   const workspace: WorkspaceData = {
     sessions: extensions.sessions,
     profile: { membership: await membershipFor(identity.id), displayName: identity.displayName, storageKey: identity.id, avatarId: extensions.preferences?.avatar_id ?? null, language: extensions.preferences?.language === "en" ? "en" : "tr" },
@@ -546,6 +548,7 @@ export async function readWorkspace(identity: Identity, importedSets?: number): 
       notes: String(row.notes),
       status: row.status === "ready" || row.status === "performed" ? row.status : "draft",
       tracks: setTracks.get(String(row.id)) ?? [],
+      shareToken: shares.get(String(row.id)) ?? null,
       createdAt: String(row.created_at),
       updatedAt: String(row.updated_at),
       revision: Number(row.revision),
@@ -780,26 +783,35 @@ export async function removeTrackFromCrate(ownerId: string, crateId: string, tra
     .run();
 }
 
-export async function createSet(ownerId: string, input: SetInput) {
+export async function createSet(ownerId: string, input: SetInput, trackIds: string[] = []) {
   const now = new Date().toISOString();
-  await database()
-    .prepare(
-      `INSERT INTO mix_sets
-      (owner_id,id,title,genre,event_date,notes,status,created_at,updated_at,revision)
-      VALUES (?,?,?,?,?,?,?,?,?,1)`,
-    )
-    .bind(
-      ownerId,
-      crypto.randomUUID(),
-      input.title,
-      input.genre,
-      input.eventDate,
-      input.notes,
-      input.status,
-      now,
-      now,
-    )
-    .run();
+  const id = crypto.randomUUID();
+  const db = database();
+  const unique = [...new Set(trackIds)];
+  // D1 caps bound parameters per query, so ownership is checked in chunks.
+  for (let start = 0; start < unique.length; start += 90) {
+    const chunk = unique.slice(start, start + 90);
+    const owned = await db
+      .prepare(`SELECT id FROM tracks WHERE owner_id=? AND id IN (${chunk.map(() => "?").join(",")})`)
+      .bind(ownerId, ...chunk)
+      .all<{ id: string }>();
+    if (owned.results.length !== chunk.length) throw new WorkspaceError("Parçalardan biri bulunamadı. Sayfayı yenile.", 404);
+  }
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO mix_sets
+        (owner_id,id,title,genre,event_date,notes,status,created_at,updated_at,revision)
+        VALUES (?,?,?,?,?,?,?,?,?,1)`,
+      )
+      .bind(ownerId, id, input.title, input.genre, input.eventDate, input.notes, input.status, now, now),
+    ...unique.map((trackId, position) =>
+      db
+        .prepare("INSERT INTO set_tracks (owner_id,set_id,track_id,position,notes,added_at) VALUES (?,?,?,?,?,?)")
+        .bind(ownerId, id, trackId, position, "", now),
+    ),
+  ]);
+  return id;
 }
 
 export async function updateSet(
@@ -836,6 +848,7 @@ export async function deleteSet(ownerId: string, id: string, expectedRevision: n
     .run();
   if (!result.meta.changes) throw new WorkspaceError("Set değişmiş veya silinmiş.", 409);
   await db.prepare("DELETE FROM set_tracks WHERE owner_id=? AND set_id=?").bind(ownerId, id).run();
+  await db.prepare("DELETE FROM set_shares WHERE owner_id=? AND set_id=?").bind(ownerId, id).run();
 }
 
 export async function addTrackToSet(ownerId: string, setId: string, trackId: string) {

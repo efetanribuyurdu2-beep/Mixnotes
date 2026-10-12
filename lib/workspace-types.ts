@@ -69,6 +69,7 @@ export type MixSet = {
   notes: string;
   status: "draft" | "ready" | "performed";
   tracks: SetTrack[];
+  shareToken?: string | null;
   createdAt: string;
   updatedAt: string;
   revision: number;

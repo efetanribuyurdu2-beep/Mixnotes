@@ -1,5 +1,6 @@
 "use client";
 import {CloudAudio} from './cloud-audio';
+import {AudioAnalysisPanel} from './audio-analysis-panel';
 import {L,Localized} from "./localized";
 import {useEffect,useState,useId,useRef} from 'react';
 import {LoaderCircle,Upload,X} from 'lucide-react';
@@ -43,7 +44,7 @@ export function AudioAttachment({owner,trackId,compact=false,disabled=false}:{ow
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   return <Localized><section className={`audio-attachment${compact?' compact':''}`}>
     <div className="section-title-row"><span className="overline"><L text={"Geçiş için ses dosyası"}/></span>{asset&&<button data-localize-attrs="aria-label" className="icon-control" disabled={busy||disabled} aria-label="Bu cihazdaki ses dosyasını kaldır" onClick={async()=>{setBusy(true);setError('');try{await removeLocalAudio(owner,trackId);}catch(error){setError(error instanceof Error?error.message:'Silinemedi.');}finally{setBusy(false);}}}><X size={14}/></button>}</div>
-    {asset&&<><p className="audio-filename">{asset.name}<small>{secondsLabel(asset.duration)}<L text={" · Gerçek waveform"}/></small></p>{!compact&&<Waveform asset={asset}/>}</>}
+    {asset&&<><p className="audio-filename">{asset.name}<small>{secondsLabel(asset.duration)}<L text={" · Gerçek waveform"}/></small></p>{!compact&&<Waveform asset={asset}/>}<AudioAnalysisPanel trackId={trackId} asset={asset}/></>}
     <label className={`button secondary audio-upload${busy||disabled?' is-disabled':''}`}>{busy?<LoaderCircle className="spin" size={15}/>:<Upload size={15}/>} {busy?<L text={'Ses analiz ediliyor…'}/>:asset?<L text={'Ses dosyasını değiştir'}/>:<L text={'MP3 / WAV ekle'}/>}<input disabled={busy||disabled||!owner} type="file" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac,audio/*" onChange={async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;setBusy(true);setError('');try{await saveLocalAudio(owner,trackId,file);}catch(error){setError(error instanceof Error?error.message:'Ses dosyası eklenemedi.');}finally{setBusy(false);}}}/></label>
     {(error||loadError)&&<p role="alert" className="inline-error"><L text={error||loadError}/></p>}
     {asset?.storage==='session'&&<p className="audio-session-warning" role="status"><L text="Ses dinlemeye hazır. Tarayıcı kalıcı kaydı reddettiği için bu dosya yalnızca açık oturumda kullanılabilir. Sayfayı kapatır veya yenilersen ses dosyasını tekrar seçmen gerekir; Library kaydın korunur."/></p>}

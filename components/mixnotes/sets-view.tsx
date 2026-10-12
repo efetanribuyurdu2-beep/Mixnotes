@@ -7,16 +7,22 @@ import {
   CalendarDays,
   Check,
   CircleDashed,
+  Download,
   Edit3,
   GripVertical,
+  LayoutTemplate,
   ListMusic,
   Plus,
   Search,
   MonitorPlay,
+  Share2,
   Trash2,
   Wand2,
 } from "lucide-react";
 import { HarmonicBadge, SetOptimizer, StageMode } from "./set-stage";
+import { SetTemplateDialog } from "./set-template-dialog";
+import { SetExportDialog } from "./set-export-dialog";
+import { SetShareDialog } from "./set-share-dialog";
 import { ReorderActions, TrackStrip } from "./track-strip";
 import { useWorkspace } from "./workspace-context";
 import { recommendNext } from "@/lib/dj-logic";
@@ -73,6 +79,9 @@ export function SetsView() {
   const [dragOver, setDragOver] = useState(false);
   const [stageOpen, setStageOpen] = useState(false);
   const [optimizerOpen, setOptimizerOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const active = data.sets.find((set) => set.id === selectedSetId) ?? data.sets[0];
   const trackById = new Map(data.tracks.map((track) => [track.id, track]));
   const orderedTracks = active?.tracks.map((item) => trackById.get(item.trackId)).filter(Boolean) as Track[] ?? [];
@@ -122,8 +131,12 @@ export function SetsView() {
           <h1><L text={"Akışı sırala, boşlukları gör"}/></h1>
           <p className="view-intro"><L text={"BPM ve enerji bilgisini rehber olarak kullan; yaratıcı karar her zaman sende."}/></p>
         </div>
-        <button className="button primary" onClick={() => openEditor({ kind: "set" })}><Plus size={16} /><L text={" Yeni set"}/></button>
+        <div className="header-actions">
+          <button className="button secondary" onClick={() => setTemplateOpen(true)}><LayoutTemplate size={16} /><L text={" Şablondan set"}/></button>
+          <button className="button primary" onClick={() => openEditor({ kind: "set" })}><Plus size={16} /><L text={" Yeni set"}/></button>
+        </div>
       </header>
+      {templateOpen && <SetTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />}
 
       <div className="builder-layout">
         <nav className="object-list" aria-label="Set listesi">
@@ -152,7 +165,8 @@ export function SetsView() {
                 <div className="header-actions">
                   {orderedTracks.length > 0 && <button className="button primary" onClick={() => setStageOpen(true)}><MonitorPlay size={15} /><L text={" Sahne modu"}/></button>}
                   {orderedTracks.length > 2 && <button className="button secondary" onClick={() => setOptimizerOpen(true)}><Wand2 size={15} /><L text={" Akışı optimize et"}/></button>}
-                  <button className="button secondary" onClick={exportSet}><L text={"Set notlarını indir"}/></button>
+                  <button className="button secondary" onClick={() => setShareOpen(true)}><Share2 size={15} /><L text={active.shareToken ? " Paylaşılıyor" : " Paylaş"}/></button>
+                  <button className="button secondary" onClick={() => setExportOpen(true)}><Download size={15} /><L text={" Dışa aktar"}/></button>
                   <button className="button secondary" onClick={() => openEditor({ kind: "picker", target: "set", targetId: active.id })}><Plus size={15} /><L text={" Parça ekle"}/></button>
                   <button data-localize-attrs="aria-label" className="icon-control" onClick={() => openEditor({ kind: "set", item: active })} aria-label="Seti düzenle"><Edit3 size={16} /></button>
                   <button className="icon-control danger-ghost" onClick={() => requestDelete({ kind: "set", item: active })} aria-label="Seti sil"><Trash2 size={16} /></button>
@@ -165,6 +179,8 @@ export function SetsView() {
                 <span><small><L text={"DURUM"}/></small><strong>{active.status === "ready" ? <L text={"Hazır"}/> : active.status === "performed" ? <L text={"Çalındı"}/> : <L text={"Taslak"}/>}</strong></span>
               </div>
               {stageOpen && <StageMode set={active} tracks={orderedTracks} onClose={() => setStageOpen(false)} />}
+              {shareOpen && <SetShareDialog set={active} open={shareOpen} onOpenChange={setShareOpen} />}
+              {exportOpen && <SetExportDialog set={active} tracks={orderedTracks} open={exportOpen} onOpenChange={setExportOpen} onNotes={exportSet} />}
               {optimizerOpen && <SetOptimizer set={active} tracks={orderedTracks} open={optimizerOpen} onOpenChange={setOptimizerOpen} />}
               <SetFlow tracks={orderedTracks} /><SetReadiness setId={active.id}/>
               {active.notes && <div className="set-note-inline"><span><L text={"SET NOTU"}/></span><p>{active.notes}</p></div>}
@@ -248,6 +264,7 @@ export function SetsView() {
               <h2><L text={"İlk performans akışını kur"}/></h2>
               <p><L text={"Set bir crate değildir; çalacağın parçaları bilinçli bir sıraya yerleştir."}/></p>
               <button className="button primary" onClick={() => openEditor({ kind: "set" })}><Plus size={16} /><L text={" İlk seti oluştur"}/></button>
+              <button className="button secondary" onClick={() => setTemplateOpen(true)}><LayoutTemplate size={16} /><L text={" Şablondan başla"}/></button>
             </div>
           )}
         </section>

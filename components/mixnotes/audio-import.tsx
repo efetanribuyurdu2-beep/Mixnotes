@@ -34,7 +34,7 @@ export function AudioImport() {
           let target = workspace.tracks.find(track => track.id === row.trackId);
           if (row.trackId && !target) throw new Error("Seçilen parça bulunamadı. Yeniden seç.");
           if (!row.trackId) {
-            const input = importedTrackSchema.parse({ title: row.title, artist: row.artist, durationSeconds: Math.max(1, Math.round(asset.duration)) });
+            const input = importedTrackSchema.parse({ title: row.title, artist: row.artist, durationSeconds: Math.max(1, Math.round(asset.duration)), bpm: asset.analysis?.tempo?.bpm ?? null, musicalKey: asset.analysis?.key?.camelot ?? "" });
             target = workspace.tracks.find(track => same(track.title,input.title) && same(track.artist,input.artist) && !track.version.trim());
             if (!target) {
               patch(row.id, { status: "Library’ye ekleniyor…" });

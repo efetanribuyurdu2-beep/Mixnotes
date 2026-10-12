@@ -1,6 +1,7 @@
 import {waveformPeaks} from './transition-audio';
+import {analyzePcm,type AudioAnalysis} from './audio-analysis';
 export type LocalAudio = {key:string;name:string;file:Blob;duration:number;peaks:number[];addedAt:string;storage?:'persistent'|'session'};
-export type AnalyzedAudio = Omit<LocalAudio,'key'>;
+export type AnalyzedAudio = Omit<LocalAudio,'key'> & {analysis?:AudioAnalysis};
 type StoredAudio = Omit<LocalAudio,'file'|'storage'> & {file?:Blob;bytes?:ArrayBuffer;mime?:string};
 // Some iOS webviews refuse IndexedDB Blob/File writes. Store ordinary bytes and
 // rebuild a Blob when reading. Keep a session copy if persistence is unavailable.
@@ -56,12 +57,15 @@ export async function analyzeAudioFile(file:File):Promise<AnalyzedAudio>{
   // decodeAudioData may detach its input; preserve an independent byte copy.
   const audio=await context.decodeAudioData(bytes.slice(0));
   if(audio.duration>900)throw new Error('Tek parça en fazla 15 dakika olabilir.');
-  return {name:file.name,file:new Blob([bytes],{type:file.type||'application/octet-stream'}),duration:audio.duration,peaks:waveformPeaks(Array.from({length:audio.numberOfChannels},(_,i)=>audio.getChannelData(i))),addedAt:new Date().toISOString()};
+  const channels=Array.from({length:audio.numberOfChannels},(_,i)=>audio.getChannelData(i));
+  let analysis:AudioAnalysis|undefined;
+  try{analysis=analyzePcm(channels,audio.sampleRate);}catch{analysis=undefined;}
+  return {name:file.name,file:new Blob([bytes],{type:file.type||'application/octet-stream'}),duration:audio.duration,peaks:waveformPeaks(channels),addedAt:new Date().toISOString(),analysis};
  }catch(error){if(error instanceof DOMException&&error.name==='EncodingError')throw new Error('Ses dosyası çözülemedi. MP3 veya WAV sürümünü dene.');throw error;}finally{await context.close();}
 }
 export async function storeAnalyzedAudio(owner:string,trackId:string,audio:AnalyzedAudio){
  const id=key(owner,trackId);
- const asset:LocalAudio={...audio,key:id,storage:'persistent'};
+ const asset:LocalAudio={name:audio.name,file:audio.file,duration:audio.duration,peaks:audio.peaks,addedAt:audio.addedAt,key:id,storage:'persistent'};
  const record:StoredAudio={key:id,name:audio.name,bytes:await audio.file.arrayBuffer(),mime:audio.file.type,duration:audio.duration,peaks:audio.peaks,addedAt:audio.addedAt};
  try{await operation('readwrite',store=>store.put(record));sessionAssets.delete(id);}
  catch{asset.storage='session';sessionAssets.set(id,asset);}
@@ -74,4 +78,12 @@ export async function localAudioIds(owner:string){
  const prefix=key(owner,'');const temporary=[...sessionAssets.keys()].filter(k=>k.startsWith(prefix)).map(k=>k.slice(prefix.length));
  try{const stored=await operation<IDBValidKey[]>('readonly',store=>store.getAllKeys());return {ids:new Set([...temporary,...stored.filter((k):k is string=>typeof k==='string'&&k.startsWith(prefix)).map(k=>k.slice(prefix.length))]),error:''};}
  catch{return {ids:new Set(temporary),error:'Bu tarayıcıdaki ses arşivi kontrol edilemedi. Dosyaları Library’den kontrol et.'};}
+}
+
+// Re-decode a stored file for tempo/key analysis without touching the saved asset.
+export async function analyzeStoredAudio(file:Blob):Promise<AudioAnalysis>{
+ const context=new AudioContext({sampleRate:22050});
+ try{const audio=await context.decodeAudioData(await file.arrayBuffer());return analyzePcm(Array.from({length:audio.numberOfChannels},(_,i)=>audio.getChannelData(i)),audio.sampleRate);}
+ catch{throw new Error('Ses dosyası analiz edilemedi. MP3 veya WAV sürümünü dene.');}
+ finally{await context.close();}
 }

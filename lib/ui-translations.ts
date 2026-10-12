@@ -720,6 +720,66 @@ Bir key seç; uyumlu key'ler ve Library'deki karşılıkları öne çıkar. Halk
 UYUMLU KEY'LER|COMPATIBLE KEYS
 LIBRARY'DE|IN LIBRARY
 Bu key'lerde parça yok. Library'de key bilgisini Camelot formatında (ör. 8A) gir.|No tracks in these keys. Enter keys in Camelot format (e.g. 8A) in your Library.
+Yüksek güven|High confidence
+Orta güven|Medium confidence
+Düşük güven|Low confidence
+Analiz ediliyor…|Analyzing…
+Yeniden analiz et|Analyze again
+BPM ve key'i analiz et|Analyze BPM and key
+Parçaya uygula|Apply to track
+Kayıttaki değerlerle aynı.|Matches the saved values.
+Belirgin bir ritim veya ton bulunamadı.|No clear beat or key was found.
+Analiz bu cihazda yapılır ve tahmindir. Yarım/çift tempo karışabilir; kulağınla doğrula.|Analysis runs on this device and is an estimate. Half/double tempo can be confused; confirm by ear.
+Analiz sonucu parçaya kaydedildi|Analysis saved to track
+Ses dosyası analiz edilemedi. MP3 veya WAV sürümünü dene.|The audio file could not be analyzed. Try an MP3 or WAV version.
+Analiz başarısız.|Analysis failed.
+Şablondan set|From template
+Şablondan başla|Start from a template
+Şablondan set oluştur|Create a set from a template
+Bir enerji eğrisi seç; MixNotes Library'nden bu eğriye ve akıcı geçişlere uyan parçaları sıralar. Sonra istediğin gibi düzenle.|Pick an energy curve; MixNotes orders Library tracks that fit it with smooth transitions. Then edit as you like.
+Isınma|Warm-up
+Düşük enerjiyle başla, odayı yavaşça doldur.|Start low and fill the room gradually.
+Zirve saati|Peak time
+Yüksek enerjiyi koru, kısa nefes aralarıyla.|Hold high energy with short breathers.
+Gün batımı|Sunset
+Melodik bir yükseliş, sonra yumuşak bir iniş.|A melodic rise, then a gentle descent.
+Yolculuk|Journey
+Uzun set: yavaş başla, zirveye çık, kontrollü kapat.|Long set: start slow, climb to the peak, land with control.
+Kapanış|Closing
+Zirveden çık, tanıdık parçalarla nazikçe bitir.|Come down from the peak and finish gently with familiar tracks.
+Set adı|Set name
+Süre (dk)|Length (min)
+Tür|Genre
+Tüm Library|Whole Library
+Hedef|Target
+Seçilen|Selected
+Bu seçime uyan Library parçası yok. Türü değiştir veya Library'ye parça ekle.|No Library tracks match this selection. Change the genre or add tracks.
+Seti oluştur|Create set
+Şablondan set oluşturuldu|Set created from template
+Dışa aktar|Export
+Seti dışa aktar|Export set
+Seti DJ yazılımına playlist olarak al. Parçalar dosya adıyla eşlenir; ses dosyası MixNotes'a ekliyse onun adı kullanılır, değilse “Sanatçı - Parça.mp3” varsayılır.|Bring the set into your DJ software as a playlist. Tracks are matched by file name: an audio file attached in MixNotes keeps its name, otherwise “Artist - Title.mp3” is assumed.
+Müzik klasörün (isteğe bağlı)|Your music folder (optional)
+Dosyalarının bulunduğu klasörü yazarsan yazılım parçaları doğrudan bulur. Boş bırakırsan playlist'i müzik klasörüne koyup açabilirsin.|If you enter the folder that holds your files, the software finds tracks directly. Leave it blank and open the playlist from inside your music folder.
+Rekordbox › Tercihler › Gelişmiş › rekordbox xml ile içe al. BPM, key, puan ve geçiş notları yorum olarak gelir.|Import via Rekordbox › Preferences › Advanced › rekordbox xml. BPM, key, rating and transition notes arrive as comments.
+Serato, Traktor, VirtualDJ ve Engine DJ'de playlist olarak açılır.|Opens as a playlist in Serato, Traktor, VirtualDJ and Engine DJ.
+Set notları (TXT)|Set notes (TXT)
+Sıra, BPM/key, cue notları ve geçiş teknikleri; yazdırmak için.|Order, BPM/key, cue notes and transition techniques, ready to print.
+Cue noktaları ve beatgrid DJ yazılımının kendi analizine bırakılır.|Cue points and beatgrids are left to your DJ software's own analysis.
+Seti paylaş|Share set
+Bağlantıya sahip olan herkes set listesini görür: parça adı, sanatçı, BPM, key ve süre. DJ notların, cue'ların, puanların ve kaynakların gizli kalır.|Anyone with the link sees the tracklist: title, artist, BPM, key and length. Your DJ notes, cues, ratings and sources stay private.
+Kopyala|Copy
+Paylaş|Share
+Paylaşılıyor|Shared
+Sayfayı aç|Open page
+Bağlantıyı kaldır|Remove link
+Evet, bağlantıyı kaldır|Yes, remove the link
+Kaldırırsan eski bağlantı çalışmaz. Yeniden paylaşırsan yeni bir bağlantı oluşur.|Once removed, the old link stops working. Sharing again creates a new link.
+Bağlantı oluştur|Create link
+Bağlantı kopyalandı|Link copied
+Kopyalanamadı; bağlantıyı seçip kopyala.|Could not copy; select the link and copy it.
+Paylaşım bağlantısı oluşturuldu|Share link created
+Paylaşım bağlantısı kaldırıldı|Share link removed
 `;
 export const englishCopy: Record<string,string> = Object.fromEntries(entries.trim().split('\n').map(line=>{const i=line.indexOf('|');return[line.slice(0,i),line.slice(i+1)];}));
 export function translateUi(text:string,language:Language){
